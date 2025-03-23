@@ -1,0 +1,66 @@
+##################### TABLES TAD PROJECT ##################### (22 ESS + 7 OPTIO)
+
+##################### Gestion du matériel informatique ##################### (10 ESS + ? OPTIO)
+glpi_assets_assets,"Inventaire général des actifs matériels."
+
+glpi_assets_assetdefinitions,"Définitions et classifications d’actifs informatiques."
+glpi_assets_assetmodels,"Modèles des actifs."
+glpi_assets_assettypes,"Types d’actifs (hardware)."
+
+
+glpi_computers,"Enregistre les ordinateurs et serveurs avec leurs caractéristiques techniques et affectations."
+glpi_monitors,"Inventaire des moniteurs et écrans."
+glpi_peripherals,"Inventaire des périphériques connectés."
+glpi_printers,"Inventaire des imprimantes dans le parc."
+glpi_softwares,"id, entities_id, is_recursive, name, comment, locations_id, users_id_tech, groups_id_tech, is_update, softwares_id, manufacturers_id, is_deleted, is_template, template_name, date_mod, users_id, groups_id, ticket_tco, is_helpdesk_visible, softwarecategories_id, is_valid, date_creation, pictures"
+# Tables d'associations ?
+glpi_assets_assets_peripheralassets,"Associations entre actifs et périphériques."
+
+
+
+##################### Gestion des utilisateurs ##################### (6 ESS + 1 OPTIO)
+glpi_entities,"Définit les entités organisationnelles et hiérarchies associées aux utilisateurs."
+glpi_users,"Table centrale contenant les informations des utilisateurs (identifiants, noms, contacts, etc.)."
+glpi_profiles,"Définit les profils d’accès et permissions des utilisateurs."
+glpi_groups,"Groupes d’utilisateurs pour la gestion collective des droits."
+# Tables d'associations ?
+glpi_groups_users,"Associations entre groupes et utilisateurs."
+glpi_profiles_users,"Associations entre profils et utilisateurs."
+
+### Optionnelle ###
+# glpi_usercategories,"Catégorisation des utilisateurs par service ou fonction."
+
+
+
+
+
+##################### Informations sur la structure des réseaux ##################### (6 ESS + 6 OPTIO)
+### Essentielles ###
+glpi_ipaddresses,"Inventaire et attribution des adresses IP aux équipements."
+glpi_ipnetworks,"Définit les sous-réseaux et plages d’adresses IP."
+glpi_networkinterfaces,"Informations sur les interfaces réseau des équipements."
+glpi_networkequipments,"Inventaire des équipements réseau."
+glpi_networks,"Configuration globale et inventaire des réseaux."
+glpi_networkports,"Inventaire des ports réseau (physiques et logiques)."
+
+
+
+### Optionnelles ###
+# Idee : creation d'une vue qui fusionne les donnees avec glpi_networks pour simplifier l'acces.
+# Peut être omise ou intégrée dans une vue avec glpi_networks.
+glpi_networknames,"Noms et identifiants des segments ou domaines réseau."
+
+# Associations entre adresses IP et réseaux – À conserver uniquement si la relation est many-to-many. 
+# Si chaque IP est directement rattachée à un réseau, envisagez d’intégrer l’ID de réseau dans glpi_ipaddresses.
+glpi_ipaddresses_ipnetworks,"Associations entre adresses IP et réseaux correspondants."
+
+# Associe les réseaux aux VLANs configurés.
+# Conserver si la gestion fine des VLANs est nécessaire pour vos tests de performance et votre structure multi-sites.
+glpi_ipnetworks_vlans,"Associe les réseaux aux VLANs configurés."
+
+# Liaison entre ports réseau et VLANs – De même, à conserver en cas de besoin de gestion détaillée des VLANs sur les ports.
+glpi_networkports_vlans,"Liaison entre ports réseau et VLANs."
+
+glpi_wifinetworks,"Données sur les réseaux sans fil (WiFi) et leur configuration."
+
+glpi_cables,"Inventaire des câbles utilisés dans l’infrastructure réseau."
