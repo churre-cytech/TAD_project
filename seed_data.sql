@@ -1,11 +1,14 @@
-SELECT user FROM dual;
+-- SELECT user FROM dual;
 
 
 
 --------------------------------------------------------------------
 -- Insertion dans SITE
 --------------------------------------------------------------------
-SELECT * FROM SITE;
+-- SELECT * FROM SITE;
+
+-- DELETE FROM SITE;
+-- COMMIT;
 
 INSERT INTO SITE (name, location)
 VALUES ('Cergy', '95000 Cergy');
@@ -20,10 +23,10 @@ COMMIT;
 --------------------------------------------------------------------
 -- Insertion dans USER_ROLE
 --------------------------------------------------------------------
-SELECT * FROM USER_ROLE;
+-- SELECT * FROM USER_ROLE;
 
-DELETE FROM USER_ROLE;
-COMMIT;
+-- DELETE FROM USER_ROLE;
+-- COMMIT;
 
 INSERT INTO USER_ROLE (role_name, description)
 VALUES ('Super Administrator', 'Full control over the entire system, including configuration, security, and user management');
@@ -59,18 +62,18 @@ COMMIT;
 --      5  | Employee
 --      6  | Student
 
-SELECT * FROM USER_ACCOUNT;
+-- SELECT * FROM USER_ACCOUNT;
 
 -- QUERY TO RETRIEVE ALL STUDENTS
-SELECT *
-FROM USER_ACCOUNT u
-JOIN USER_ROLE r ON u.role_id = r.role_id
-JOIN SITE s ON u.site_id = s.site_id
-WHERE r.role_name = 'Student'
-  AND s.name = 'Cergy';
+-- SELECT *
+-- FROM USER_ACCOUNT u
+-- JOIN USER_ROLE r ON u.role_id = r.role_id
+-- JOIN SITE s ON u.site_id = s.site_id
+-- WHERE r.role_name = 'Student'
+--   AND s.name = 'Cergy';
 
-DELETE FROM USER_ACCOUNT;
-COMMIT;
+-- DELETE FROM USER_ACCOUNT;
+-- COMMIT;
 
 DECLARE
   v_first_name VARCHAR2(50);
@@ -134,10 +137,10 @@ END;
 --------------------------------------------------------------------
 -- Insertion dans ASSET_TYPE
 --------------------------------------------------------------------
-SELECT * FROM ASSET_TYPE;
+-- SELECT * FROM ASSET_TYPE;
 
-DELETE FROM ASSET_TYPE;
-COMMIT;
+-- DELETE FROM ASSET_TYPE;
+-- COMMIT;
 
 BEGIN
   --------------------------------------------------------------------
@@ -249,7 +252,7 @@ END;
 --------------------------------------------------------------------
 -- Insertion dans ASSET
 --------------------------------------------------------------------
-SELECT * FROM ASSET;
+-- SELECT * FROM ASSET;
 
 --------------------------------------------------------------------
 -- PROCEDURE FOR ASSET TABLE (insert_asset)
@@ -259,10 +262,10 @@ CREATE OR REPLACE PROCEDURE insert_asset (
   p_model_name    IN VARCHAR2,
   p_name          IN VARCHAR2,
   p_serial        IN VARCHAR2,
-  p_assigned_user_id IN VARCHAR2,
+  p_assigned_user_id IN NUMBER,
   p_purchase_date IN DATE,
   p_site_id       IN NUMBER,
-  p_status        IN VARCHAR2 DEFAULT 'active'
+  p_status        IN VARCHAR2
 ) IS
   v_asset_type_id NUMBER;
   v_asset_id      NUMBER;
@@ -272,9 +275,9 @@ BEGIN
   -- Test if p_assigned_user_id exists in USER_ACCOUNT 
   IF p_assigned_user_id IS NOT NULL THEN
     BEGIN
-      SELECT 1 FROM v_dummy
+      SELECT 1 INTO v_dummy
       FROM USER_ACCOUNT
-      WHERE user_id = p_assigned_user_id
+      WHERE user_id = p_assigned_user_id;
     EXCEPTION
       WHEN NO_DATA_FOUND THEN
         RAISE_APPLICATION_ERROR(-20001, 'Assigned user with user_id ' || p_assigned_user_id || ' does not exist.');
@@ -333,33 +336,34 @@ END insert_asset;
 --------------------------------------------------------------------
 
 -- Testing if insert_asset is working
-BEGIN
-  insert_asset(
-    p_system_name   => 'desktop',
-    p_model_name    => 'Dell Optiplex 7070',
-    p_name          => 'Office Desktop A',
-    p_serial        => 'SN-0012345',
-    p_assigned_user_id => TRUNC(DBMS_RANDOM.VALUE(1,200)),
-    p_purchase_date => TO_DATE('2023-10-10','YYYY-MM-DD'),
-    p_site_id       => 1,
-    p_status        => 'active'
-  );
-END;
+-- BEGIN
+--   insert_asset(
+--     p_system_name   => 'desktop',
+--     p_model_name    => 'Dell Optiplex 7070',
+--     p_name          => 'Office Desktop A',
+--     p_serial        => 'SN-0012345',
+--     p_assigned_user_id => TRUNC(DBMS_RANDOM.VALUE(1,200)),
+--     p_purchase_date => TO_DATE('2023-10-10','YYYY-MM-DD'),
+--     p_site_id       => 1,
+--     p_status        => 'active'
+--   );
+-- END;
 
 
 -- Seeding with PL/SQL script
 DECLARE
-  v_asset_id         NUMBER;
-  v_asset_type_id    NUMBER;
-  v_name             VARCHAR2(100);
-  v_serial           VARCHAR2(100);
-  v_purchase_date    DATE;
+  v_asset_id         ASSET.asset_id%TYPE;
+  v_asset_type_id    ASSET.asset_type_id%TYPE;
+  v_name             ASSET.name%TYPE;
+  v_serial           ASSET.serial%TYPE;
+  v_purchase_date    ASSET.purchase_date%TYPE;
   v_random_num       NUMBER;
   v_days_offset      NUMBER;
-  v_site_id          NUMBER;
-  v_status           VARCHAR2(20) := 'active';
+  v_site_id          ASSET.site_id%TYPE;
+  v_status           ASSET.status%TYPE;
   v_base_date        DATE := TO_DATE('2020-01-01','YYYY-MM-DD');
-  v_assigned_user_id NUMBER;
+  v_assigned_user_id ASSET.assigned_user_id%TYPE;
+  v_rand_status      NUMBER;
 BEGIN
   FOR i IN 1..100 LOOP
     -- Generate a random asset type id (assumes IDs 1 to 10 exist)
@@ -383,10 +387,19 @@ BEGIN
     IF DBMS_RANDOM.VALUE(0,1) < 0.5 THEN
       v_assigned_user_id := NULL;
     ELSE
-      v_assigned_user_id := TRUNC(DBMS_RANDOM.VALUE(27, 128));
+      v_assigned_user_id := TRUNC(DBMS_RANDOM.VALUE(1, 101));
     END IF;
     
-    -- Insert the asset into ASSET
+    -- 80% chance 'active', 10% chance 'maintenance', 10% chance 'decommissioned'
+    v_rand_status := DBMS_RANDOM.VALUE(0,1);
+    IF v_rand_status < 0.8 THEN
+      v_status := 'active';
+    ELSIF v_rand_status < 0.9 THEN
+      v_status := 'maintenance';
+    ELSE
+      v_status := 'decommissioned';
+    END IF;
+    
     INSERT INTO ASSET (
       asset_type_id,
       name,
@@ -415,10 +428,216 @@ BEGIN
                         ' with asset_id = ' || v_asset_id || 
                         ', asset_type_id = ' || v_asset_type_id ||
                         ', site_id = ' || v_site_id ||
-                        ', assigned_user_id = ' || NVL(TO_CHAR(v_assigned_user_id), 'NULL'));
+                        ', assigned_user_id = ' || NVL(TO_CHAR(v_assigned_user_id), 'NULL') ||
+                        ', status = ' || v_status);
   END LOOP;
   
   COMMIT;
   DBMS_OUTPUT.PUT_LINE('All assets inserted successfully.');
+EXCEPTION
+  WHEN OTHERS THEN
+    ROLLBACK;
+    DBMS_OUTPUT.PUT_LINE('Error inserting asset: ' || SQLERRM);
+    RAISE;
+END;
+
+
+
+--------------------------------------------------------------------
+-- Insertion dans TICKET
+--------------------------------------------------------------------
+-- SELECT * FROM TICKET;
+
+-- DELETE FROM TICKET;
+-- COMMIT;
+
+DECLARE
+  v_ticket_id         TICKET.ticket_id%TYPE;
+  v_user_id           TICKET.user_id%TYPE;
+  v_site_id           TICKET.site_id%TYPE;
+  v_subject           TICKET.subject%TYPE;
+  v_description       TICKET.description%TYPE;
+  v_status            TICKET.status%TYPE;
+  v_priority          TICKET.priority%TYPE;
+  v_creation_date     TICKET.creation_date%TYPE;
+  v_updated_date      TICKET.updated_date%TYPE;
+  v_resolution_date   TICKET.resolution_date%TYPE;
+  v_assigned_to       TICKET.assigned_to%TYPE;
+  v_updated_by        TICKET.updated_by%TYPE;
+BEGIN
+  FOR i IN 1..30 LOOP
+    -- Generate random values for site, user, and assigned_to
+    v_site_id := TRUNC(DBMS_RANDOM.VALUE(1, 3));        -- 1 or 2 (e.g., for Cergy or Pau)
+    v_user_id := TRUNC(DBMS_RANDOM.VALUE(2, 101));        -- assuming user_id between 1 and 100
+    v_assigned_to := TRUNC(DBMS_RANDOM.VALUE(2, 51));     -- assuming assigned_to between 1 and 50
+
+    -- Set subject and description with sample text
+    v_subject := 'Ticket ' || i || ': Hardware Issue';
+    v_description := 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ' ||
+                      'Ticket number ' || i || ': This equipment overheats after a few minutes of use.';
+
+    -- Randomly choose a valid status from the allowed set: 'open', 'pending', 'closed'
+    v_status := CASE TRUNC(DBMS_RANDOM.VALUE(1, 4))
+                  WHEN 1 THEN 'open'
+                  WHEN 2 THEN 'pending'
+                  WHEN 3 THEN 'closed'
+                END;
+
+    -- Randomly choose a valid priority from the allowed set: 'low', 'medium', 'high'
+    v_priority := CASE TRUNC(DBMS_RANDOM.VALUE(1, 4))
+                    WHEN 1 THEN 'low'
+                    WHEN 2 THEN 'medium'
+                    WHEN 3 THEN 'high'
+                  END;
+
+    v_creation_date := SYSDATE;
+    v_updated_date := SYSDATE;
+
+    -- If the status is 'closed', generate a random resolution date between creation_date and creation_date + 30 days.
+    -- Otherwise, leave resolution date as NULL.
+    IF v_status = 'closed' THEN
+      v_resolution_date := v_creation_date + TRUNC(DBMS_RANDOM.VALUE(1, 31));
+    ELSE
+      v_resolution_date := NULL;
+    END IF;
+
+    -- Assume the user who creates the ticket is the one who last updated it
+    v_updated_by := v_user_id;
+
+    INSERT INTO TICKET (
+      user_id, 
+      site_id, 
+      subject, 
+      description, 
+      status, 
+      priority, 
+      creation_date, 
+      updated_date, 
+      resolution_date, 
+      assigned_to, 
+      updated_by
+    )
+    VALUES (
+      v_user_id, 
+      v_site_id, 
+      v_subject, 
+      v_description, 
+      v_status, 
+      v_priority, 
+      v_creation_date, 
+      v_updated_date, 
+      v_resolution_date, 
+      v_assigned_to, 
+      v_updated_by
+    )
+    RETURNING ticket_id INTO v_ticket_id;
+  END LOOP;
+  
+  DBMS_OUTPUT.PUT_LINE('Last ticket inserted with ticket_id = ' || v_ticket_id);
+  COMMIT;
+EXCEPTION
+  WHEN OTHERS THEN
+    ROLLBACK;
+    DBMS_OUTPUT.PUT_LINE('Error inserting ticket: ' || SQLERRM);
+    RAISE;
+END;
+
+
+--------------------------------------------------------------------
+-- Insertion dans NETWORK
+--------------------------------------------------------------------
+-- SELECT * FROM NETWORK;
+
+-- DELETE FROM NETWORK;
+-- COMMIT;
+
+BEGIN
+  INSERT INTO NETWORK (site_id, name, network_address, netmask, gateway)
+  VALUES (1, 'Réseau Cergy', '192.168.1.0', '255.255.255.0', '192.168.1.1');
+
+  INSERT INTO NETWORK (site_id, name, network_address, netmask, gateway)
+  VALUES (2, 'Réseau Pau', '192.168.2.0', '255.255.255.0', '192.168.2.1');
+
+  COMMIT;
+  
+  DBMS_OUTPUT.PUT_LINE('Networks inserted successfully.');
+END;
+
+
+
+--------------------------------------------------------------------
+-- Insertion dans IP_ADDRESS
+--------------------------------------------------------------------
+-- SELECT * FROM IP_ADDRESS;
+
+-- DELETE FROM IP_ADDRESS;
+-- COMMIT;
+
+DECLARE
+  v_ip_id       IP_ADDRESS.ip_id%TYPE;
+  v_network_id  IP_ADDRESS.network_id%TYPE;
+  v_asset_id    IP_ADDRESS.asset_id%TYPE;
+  v_ip_address  IP_ADDRESS.ip_address%TYPE;
+  v_is_dynamic  IP_ADDRESS.is_dynamic%TYPE;
+BEGIN
+  FOR i IN 1..75 LOOP
+    -- Randomly select a network (1 or 2)
+    v_network_id := TRUNC(DBMS_RANDOM.VALUE(1, 3));  -- Returns 1 or 2
+    
+    -- Set is_dynamic: 80% chance static (0) and 20% chance dynamic (1)
+    IF DBMS_RANDOM.VALUE(0,1) < 0.8 THEN
+      v_is_dynamic := 0;
+    ELSE
+      v_is_dynamic := 1;
+    END IF;
+    
+    -- For asset_id: 50% chance to leave it NULL or assign a random asset id between 1 and 100
+    IF DBMS_RANDOM.VALUE(0,1) < 0.5 THEN
+      v_asset_id := NULL;
+    ELSE
+      v_asset_id := TRUNC(DBMS_RANDOM.VALUE(1, 101));
+    END IF;
+    
+    -- Generate a random IP address based on the selected network
+    IF v_network_id = 1 THEN
+      v_ip_address := '192.168.1.' || i;
+    ELSIF v_network_id = 2 THEN
+      v_ip_address := '192.168.2.' || i;
+    ELSE
+      -- Fallback (should not occur)
+      v_ip_address := '192.168.1.' || i;
+    END IF;
+    
+    -- Insert into IP_ADDRESS
+    INSERT INTO IP_ADDRESS (
+      network_id,
+      asset_id,
+      ip_address,
+      is_dynamic,
+      created_at,
+      updated_at
+    )
+    VALUES (
+      v_network_id,
+      v_asset_id,
+      v_ip_address,
+      v_is_dynamic,
+      SYSTIMESTAMP,
+      SYSTIMESTAMP
+    )
+    RETURNING ip_id INTO v_ip_id;
+    
+    DBMS_OUTPUT.PUT_LINE('Inserted IP address ' || v_ip_address || 
+                          ' (ip_id = ' || v_ip_id || 
+                          ') for network ' || v_network_id);
+  END LOOP;
+  
+  COMMIT;
+  DBMS_OUTPUT.PUT_LINE('All IP addresses inserted successfully.');
+EXCEPTION
+  WHEN OTHERS THEN
+    ROLLBACK;
+    DBMS_OUTPUT.PUT_LINE('Error inserting IP address: ' || SQLERRM);
+    RAISE;
 END;
 

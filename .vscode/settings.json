@@ -27,13 +27,6 @@
             "database": "XEPDB1",
             "username": "CY_TECH_ADMIN",
             "password": "cy_tech_admin",
-            // "oracleOptions": {
-            //     "privilege": "SYSDBA",
-            //     "thickMode": false,
-            //     "autoCommit": false,
-            //     "lowerCase": false,
-            //     "limitPrefetchRows": false
-            // },
             "previewLimit": 50,
             "connectionTimeout": 30,
             "requestTimeout": 30,
