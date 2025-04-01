@@ -1,81 +1,152 @@
 ------------------------------------------------------------------------------
--- USER CREATION
+-- Commands to check configuration
 ------------------------------------------------------------------------------
+SELECT username FROM dba_users;
+SELECT pdb_name FROM dba_pdbs;
 
-CREATE USER CY_TECH_PAU IDENTIFIED BY pau123;  -- Base de donnée de Pau
+-- Check CDB (container database)
+SHOW CON_NAME;
+SELECT sys_context('USERENV', 'CON_NAME') AS current_container FROM dual;
 
-CREATE USER ADMIN_PAU IDENTIFIED BY adminPau123;  -- Possèdera tout les droits sur Pau
 
-CREATE USER TECH_PAU IDENTIFIED BY techPau123;  -- Possèdera les droits pour la gestion des assets (matériels) et tickets sur Pau
 
-CREATE USER RESEAU_PAU IDENTIFIED BY reseauPau123;  -- Droits pour la gestion des réseaux et IP sur Pau
 
--- Utilisateur : Etudiant, professeur, employé, etc.
-CREATE USER USER_PAU IDENTIFIED BY userPau123;  -- Possèdera les droits pour insérer des tickets uniquement sur Pau
-
-CREATE USER C##SUPERADMIN_CY_TECH IDENTIFIED BY superAdmin123;  -- Possèdera tout les droits sur Cergy ET Pau (user où les tests seront utilisés)
 ------------------------------------------------------------------------------
--- ROLE CREATION
+-- DROP USER CY_TECH_PAU IF EXISTS
 ------------------------------------------------------------------------------
+DROP USER C##CY_TECH_PAU CASCADE;
 
--- Rôle super administrateurs
-CREATE ROLE ROLE_SUPERADMIN;
+------------------------------------------------------------------------------
+-- Création de l'utilisateur CY_TECH_PAU
+------------------------------------------------------------------------------
+CREATE USER C##CY_TECH_PAU
+    IDENTIFIED BY pau123
+    DEFAULT TABLESPACE USERS       -- Remplacez USERS par le tablespace de données approprié
+    TEMPORARY TABLESPACE TEMP      -- Remplacez TEMP par le tablespace temporaire de votre environnement
+    QUOTA UNLIMITED ON USERS;        -- Ajustez le quota selon vos besoins
 
--- Rôle administrateurs
-CREATE ROLE ROLE_ADMIN_PAU;
+-- Attribution des privilèges nécessaires
+GRANT DBA, RESOURCE, CONNECT TO C##CY_TECH_PAU;
 
-CREATE ROLE ROLE_TECH_PAU;
 
-CREATE ROLE ROLE_RESEAU_PAU;
 
-CREATE ROLE ROLE_USER_PAU;
+
+------------------------------------------------------------------------------
+-- DROP PAU USERS IF EXIST
+------------------------------------------------------------------------------
+DROP USER C##ADMIN_PAU CASCADE;
+DROP USER C##IT_TECH_PAU CASCADE;
+DROP USER C##NETWORK_TECH_PAU CASCADE;
+DROP USER C##ACADEMIC_ADMIN_PAU CASCADE;
+DROP USER C##STUDENT_TEACHER_PAU CASCADE;
+
+
+------------------------------------------------------------------------------
+-- Création des utilisateurs pour le site de Pau
+------------------------------------------------------------------------------
+-- Utilisateur ADMIN_PAU : aura tous les droits sur les objets de Pau
+CREATE USER C##ADMIN_PAU IDENTIFIED BY adminPau123;
+-- Vous accorderez ultérieurement tous les privilèges d'administration nécessaires à cet utilisateur.
+
+-- Utilisateur IT_TECH_PAU : pour la gestion des assets (matériels) et des tickets
+CREATE USER C##IT_TECH_PAU IDENTIFIED BY itTechPau123;
+-- Privilèges à attribuer : gestion des tables d'assets, tickets, etc.
+
+-- Utilisateur NETWORK_TECH_PAU : pour la gestion des réseaux et des adresses IP
+CREATE USER C##NETWORK_TECH_PAU IDENTIFIED BY networkTechPau123;
+-- Privilèges à attribuer : gestion des objets liés aux réseaux et aux IP.
+
+-- Utilisateur ACADEMIC_ADMIN_PAU : responsable de la gestion des comptes utilisateurs (ajout, modification, etc.)
+CREATE USER C##ACADEMIC_ADMIN_PAU IDENTIFIED BY academicAdminPau123;
+-- Privilèges à attribuer : modification et administration des comptes utilisateurs.
+
+-- Utilisateur STUDENT_TEACHER_PAU : aura des droits limités, par exemple, pour insérer des tickets uniquement
+CREATE USER C##STUDENT_TEACHER_PAU IDENTIFIED BY studentTeacherPau123;
+-- Privilèges à attribuer : insertion et éventuellement consultation des tickets (que les tickets propres au user, pas de vue globale).
+
+
+
+
+------------------------------------------------------------------------------
+-- DROP PAU ROLE IF EXIST
+------------------------------------------------------------------------------
+DROP ROLE C##ROLE_ADMIN_PAU;
+DROP ROLE C##ROLE_IT_TECH_PAU;
+DROP ROLE C##ROLE_NETWORK_TECH_PAU;
+DROP ROLE C##ROLE_ACADEMIC_ADMIN_PAU;
+DROP ROLE C##ROLE_STUDENT_TEACHER_PAU;
+
+
+------------------------------------------------------------------------------
+-- CREATION DES ROLES POUR LE SITE DE PAU
+------------------------------------------------------------------------------
+-- Rôle administrateur : gestion globale et supervision du site
+CREATE ROLE C##ROLE_ADMIN_PAU;
+
+-- Rôle IT techniciens : pour la gestion des assets (matériels) et des tickets
+CREATE ROLE C##ROLE_IT_TECH_PAU;
+
+-- Rôle réseau : pour la gestion des réseaux et des adresses IP
+-- (+ peut voir les assets et les assets_types existants)
+CREATE ROLE C##ROLE_NETWORK_TECH_PAU;
+
+-- Rôle académique administrateur : pour la gestion des comptes utilisateurs (ajout, modification, etc.) 
+-- + potentielle update des user_role. 
+CREATE ROLE C##ROLE_ACADEMIC_ADMIN_PAU;
+
+-- Rôle étudiants/enseignants : qui insèrent (+ consultations) des tickets
+CREATE ROLE C##ROLE_STUDENT_TEACHER_PAU;
+
 
 ------------------------------------------------------------------------------
 -- GRANT PRIVILEGE TO ROLE
 ------------------------------------------------------------------------------
-
-
--- SUPER ADMIN (délégation de role)
-GRANT ROLE_ADMIN_CERGY TO ROLE_SUPERADMIN;
-GRANT ROLE_ADMIN_PAU TO ROLE_SUPERADMIN;
-
 -- ADMIN PAU
-GRANT SELECT, INSERT, UPDATE, DELETE ON CY_TECH_CERGY.USER_ACCOUNT TO ROLE_ADMIN_PAU;
-GRANT SELECT, INSERT, UPDATE, DELETE ON CY_TECH_CERGY.USER_ROLE TO ROLE_ADMIN_PAU;
-GRANT SELECT, INSERT, UPDATE, DELETE ON CY_TECH_CERGY.SITE TO ROLE_ADMIN_PAU;
-GRANT SELECT, INSERT, UPDATE, DELETE ON CY_TECH_CERGY.ASSET TO ROLE_ADMIN_PAU;
-GRANT SELECT, INSERT, UPDATE, DELETE ON CY_TECH_CERGY.ASSET_TYPE TO ROLE_ADMIN_PAU;
-GRANT SELECT, INSERT, UPDATE, DELETE ON CY_TECH_CERGY.TICKET TO ROLE_ADMIN_PAU;
-GRANT SELECT, INSERT, UPDATE, DELETE ON CY_TECH_CERGY.NETWORK TO ROLE_ADMIN_PAU;
-GRANT SELECT, INSERT, UPDATE, DELETE ON CY_TECH_CERGY.IP_ADDRESS TO ROLE_ADMIN_PAU;
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.USER_ACCOUNT TO C##ROLE_ADMIN_PAU;
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.USER_ROLE TO C##ROLE_ADMIN_PAU;
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.SITE TO C##ROLE_ADMIN_PAU;
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.ASSET TO C##ROLE_ADMIN_PAU;
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.ASSET_TYPE TO C##ROLE_ADMIN_PAU;
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.TICKET TO C##ROLE_ADMIN_PAU;
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.NETWORK TO C##ROLE_ADMIN_PAU;
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.IP_ADDRESS TO C##ROLE_ADMIN_PAU;
 
--- TECHNICIEN PAU
-GRANT SELECT, INSERT, UPDATE ON CY_TECH_CERGY.ASSET TO ROLE_TECH_PAU;
-GRANT SELECT, INSERT, UPDATE ON CY_TECH_CERGY.TICKET TO ROLE_TECH_PAU;
+-- IT TECH PAU
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.ASSET TO C##ROLE_IT_TECH_PAU;
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.ASSET_TYPE TO C##ROLE_IT_TECH_PAU;
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.TICKET TO C##ROLE_IT_TECH_PAU;
+GRANT SELECT ON C##CY_TECH_PAU.NETWORK TO C##ROLE_IT_TECH_PAU;
+GRANT SELECT ON C##CY_TECH_PAU.IP_ADDRESS TO C##ROLE_IT_TECH_PAU;
 
--- TECHNICIEN RÉSEAU PAU
-GRANT SELECT, INSERT, UPDATE ON CY_TECH_CERGY.NETWORK TO ROLE_RESEAU_PAU;
-GRANT SELECT, INSERT, UPDATE ON CY_TECH_CERGY.IP_ADDRESS TO ROLE_RESEAU_PAU;
-GRANT SELECT ON CY_TECH_CERGY.ASSET TO ROLE_RESEAU_PAU;
+-- NETWORK TECH PAU
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.NETWORK TO C##ROLE_NETWORK_TECH_PAU;
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.IP_ADDRESS TO C##ROLE_NETWORK_TECH_PAU;
+GRANT SELECT ON C##CY_TECH_PAU.ASSET TO C##ROLE_NETWORK_TECH_PAU;
+GRANT SELECT ON C##CY_TECH_PAU.ASSET_TYPE TO C##ROLE_NETWORK_TECH_PAU;
 
--- UTILISATEUR PAU
-GRANT INSERT ON CY_TECH_CERGY.TICKET TO ROLE_USER_PAU;
+-- ACADEMIC ADMIN PAU
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.USER_ACCOUNT TO C##ROLE_ACADEMIC_ADMIN_PAU;
+GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_PAU.USER_ROLE TO C##ROLE_ACADEMIC_ADMIN_PAU;
+GRANT SELECT, INSERT ON C##CY_TECH_PAU.TICKET TO C##ROLE_ACADEMIC_ADMIN_PAU;
+
+-- STUDENT/TEACHER PAU
+GRANT SELECT, INSERT ON C##CY_TECH_PAU.TICKET TO C##ROLE_STUDENT_TEACHER_PAU;
+
 
 ------------------------------------------------------------------------------
--- GRANT ROLE TO USER
+-- GRANT ROLE TO USERS
 ------------------------------------------------------------------------------
+-- ADMIN PAU
+GRANT C##ROLE_ADMIN_PAU TO C##ADMIN_PAU;
 
--- Superadmin 
-GRANT ROLE_SUPERADMIN TO  C##SUPERADMIN_CY_TECH;
+-- IT TECH PAU
+GRANT C##ROLE_IT_TECH_PAU TO C##IT_TECH_PAU;
 
--- Admin Cergy
-GRANT ROLE_ADMIN_CERGY TO C##ADMIN_CERGY;
+-- NETWORK IT PAU
+GRANT C##ROLE_NETWORK_TECH_PAU TO C##NETWORK_TECH_PAU;
 
--- Technicien Cergy
-GRANT ROLE_TECH_CERGY TO C##TECH_CERGY;
+-- ACADEMIC ADMIN PAU
+GRANT C##ROLE_ACADEMIC_ADMIN_PAU TO C##ACADEMIC_ADMIN_PAU;
 
--- Responsable Réseau Cergy
-GRANT ROLE_RESEAU_CERGY TO C##RESEAU_CERGY;
-
--- Utilisateur standard Cergy
-GRANT ROLE_USER_CERGY TO C##USER_CERGY;
+-- STUDENT/TEACHER PAU
+GRANT C##ROLE_STUDENT_TEACHER_PAU TO C##STUDENT_TEACHER_PAU;
