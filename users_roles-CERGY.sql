@@ -7,7 +7,6 @@ SELECT pdb_name FROM dba_pdbs;
 -- Check CDB (container database)
 SHOW CON_NAME;
 SELECT sys_context('USERENV', 'CON_NAME') AS current_container FROM dual;
-ALTER SESSION SET CONTAINER = CDB$ROOT;
 
 
 
@@ -135,11 +134,9 @@ GRANT SELECT ON C##CY_TECH_CERGY.ASSET_TYPE TO C##ROLE_NETWORK_TECH_CERGY;
 GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_CERGY.USER_ACCOUNT TO C##ROLE_ACADEMIC_ADMIN_CERGY;
 GRANT SELECT, INSERT, UPDATE, DELETE ON C##CY_TECH_CERGY.USER_ROLE TO C##ROLE_ACADEMIC_ADMIN_CERGY;
 GRANT SELECT, INSERT ON C##CY_TECH_CERGY.TICKET TO C##ROLE_ACADEMIC_ADMIN_CERGY;
--- FIXME : Voir si ajouter GRANT DELETE dans le cas : user veut retirer son ticket ?
 
 -- STUDENT/TEACHER CERGY
 GRANT SELECT, INSERT ON C##CY_TECH_CERGY.TICKET TO C##ROLE_STUDENT_TEACHER_CERGY;
--- FIXME : Voir si ajouter GRANT DELETE dans le cas : user veut retirer son ticket ?
 
 
 ------------------------------------------------------------------------------
