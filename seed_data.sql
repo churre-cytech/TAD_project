@@ -5,28 +5,27 @@
 --------------------------------------------------------------------
 -- Insertion dans SITE
 --------------------------------------------------------------------
-SELECT * FROM SITE;
+--SELECT * FROM SITE;
 
-DELETE FROM SITE;
-COMMIT;
+--DELETE FROM SITE;
+--COMMIT;
 
 INSERT INTO SITE (name, location)
 VALUES ('Cergy', '95000 Cergy');
 
 INSERT INTO SITE (name, location)
 VALUES ('Pau', '64000 Pau');
-
 COMMIT;
-
+/
 
 
 --------------------------------------------------------------------
 -- Insertion dans USER_ROLE
 --------------------------------------------------------------------
-SELECT * FROM USER_ROLE;
+--SELECT * FROM USER_ROLE;
 
-DELETE FROM USER_ROLE;
-COMMIT;
+--DELETE FROM USER_ROLE;
+--COMMIT;
 
 INSERT INTO USER_ROLE (role_name, description)
 VALUES ('Super Administrator', 'Full control over the entire system, including configuration, security, and user management');
@@ -50,7 +49,7 @@ INSERT INTO USER_ROLE (role_name, description)
 VALUES ('Student', 'Very restricted access, mainly read-only access to general information');
 
 COMMIT;
-
+/
 
 
 --------------------------------------------------------------------
@@ -66,18 +65,18 @@ COMMIT;
 --      6  | Employee
 --      7  | Student
 
-SELECT * FROM USER_ACCOUNT;
+--SELECT * FROM USER_ACCOUNT;
 
 -- QUERY TO RETRIEVE ALL STUDENTS FROM Cergy
-SELECT *
-FROM USER_ACCOUNT u
-JOIN USER_ROLE r ON u.role_id = r.role_id
-JOIN SITE s ON u.site_id = s.site_id
-WHERE r.role_name = 'Student'
-  AND s.name = 'Cergy';
+--SELECT *
+--FROM USER_ACCOUNT u
+--JOIN USER_ROLE r ON u.role_id = r.role_id
+---JOIN SITE s ON u.site_id = s.site_id
+--WHERE r.role_name = 'Student'
+  --AND s.name = 'Cergy';
 
-DELETE FROM USER_ACCOUNT;
-COMMIT;
+--DELETE FROM USER_ACCOUNT;
+--COMMIT;
 
 DECLARE
   v_first_name VARCHAR2(50);
@@ -134,7 +133,7 @@ BEGIN
   COMMIT;
   DBMS_OUTPUT.PUT_LINE('Random data for USER_ACCOUNT inserted successfully.');
 END;
-
+/
 
 
 
@@ -175,13 +174,13 @@ BEGIN
   -- Imprimante avec scanner intégré
   --------------------------------------------------------------------
   INSERT INTO ASSET_TYPE (system_name, label, model_name, is_active)
-  VALUES ('printer_scanner', 'Printer & Scanner', 'HP LaserJet Pro', 1);
+  VALUES ('printer_scanner', 'Printer and Scanner', 'HP LaserJet Pro', 1);
   
   INSERT INTO ASSET_TYPE (system_name, label, model_name, is_active)
-  VALUES ('printer_scanner', 'Printer & Scanner', 'Canon Pixma', 1);
+  VALUES ('printer_scanner', 'Printer and Scanner', 'Canon Pixma', 1);
   
   INSERT INTO ASSET_TYPE (system_name, label, model_name, is_active)
-  VALUES ('printer_scanner', 'Printer & Scanner', 'Brother HL-L2350DW', 1);
+  VALUES ('printer_scanner', 'Printer and Scanner', 'Brother HL-L2350DW', 1);
   
   --------------------------------------------------------------------
   -- Équipement d'affichage (tableau interactif ou projecteur)
@@ -248,9 +247,9 @@ BEGIN
   
   COMMIT;
   
-  DBMS_OUTPUT.PUT_LINE('Asset types inserted successfully.');
+  --DBMS_OUTPUT.PUT_LINE('Asset types inserted successfully.');
 END;
-
+/
 
 
 --------------------------------------------------------------------
@@ -329,7 +328,7 @@ EXCEPTION
     ROLLBACK;
     RAISE;
 END insert_asset;
-
+/
 
 
 
@@ -444,7 +443,7 @@ EXCEPTION
     DBMS_OUTPUT.PUT_LINE('Error inserting asset: ' || SQLERRM);
     RAISE;
 END;
-
+/
 
 
 --------------------------------------------------------------------
@@ -545,7 +544,7 @@ EXCEPTION
     DBMS_OUTPUT.PUT_LINE('Error inserting ticket: ' || SQLERRM);
     RAISE;
 END;
-
+/
 
 --------------------------------------------------------------------
 -- Insertion dans NETWORK
@@ -566,13 +565,13 @@ BEGIN
   
   DBMS_OUTPUT.PUT_LINE('Networks inserted successfully.');
 END;
-
+/
 
 
 --------------------------------------------------------------------
 -- Insertion dans IP_ADDRESS
 --------------------------------------------------------------------
-SELECT * FROM IP_ADDRESS;
+--SELECT * FROM IP_ADDRESS;
 
 -- DELETE FROM IP_ADDRESS;
 -- COMMIT;
@@ -644,4 +643,4 @@ EXCEPTION
     DBMS_OUTPUT.PUT_LINE('Error inserting IP address: ' || SQLERRM);
     RAISE;
 END;
-
+/
