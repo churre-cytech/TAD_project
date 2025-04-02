@@ -87,11 +87,11 @@ DECLARE
   v_phone      VARCHAR2(20);
   v_random_num NUMBER;
 BEGIN
-  FOR i IN 1..100 LOOP
-    -- Génère un prénom aléatoire de 6 lettres majuscules
-    v_first_name := DBMS_RANDOM.STRING('U', 6);
-    -- Génère un nom de famille aléatoire de 8 lettres minuscules
-    v_last_name  := DBMS_RANDOM.STRING('L', 8);
+  FOR i IN 1..1000 LOOP
+    -- Génère un prénom aléatoire de 6 lettres 
+    v_first_name := DBMS_RANDOM.STRING('L', 6);
+    -- Génère un nom de famille aléatoire de 8 lettres majuscules
+    v_last_name  := DBMS_RANDOM.STRING('U', 8);
     
     -- Construit un username unique en concaténant prénom, nom et un suffixe numérique aléatoire
     v_username := LOWER(v_first_name || '.' || v_last_name || TO_CHAR(TRUNC(DBMS_RANDOM.VALUE(100, 1000))));
@@ -124,7 +124,7 @@ BEGIN
       v_email,
       v_phone,
       CASE WHEN MOD(i, 2) = 0 THEN 2 ELSE 1 END,  -- site_id aléatoire entre 1 et 2
-      TRUNC(DBMS_RANDOM.VALUE(1,8)), -- random role_id between 1 and 6
+      TRUNC(DBMS_RANDOM.VALUE(1,8)), -- random role_id between 1 and 7
       SYSTIMESTAMP,
       SYSTIMESTAMP
     );
@@ -368,7 +368,7 @@ DECLARE
   v_assigned_user_id ASSET.assigned_user_id%TYPE;
   v_rand_status      NUMBER;
 BEGIN
-  FOR i IN 1..100 LOOP
+  FOR i IN 1..1000 LOOP
     -- Generate a random asset type id (assumes IDs 1 to 10 exist)
     v_asset_type_id := TRUNC(DBMS_RANDOM.VALUE(1, 11));
     
@@ -468,7 +468,7 @@ DECLARE
   v_assigned_to       TICKET.assigned_to%TYPE;
   v_updated_by        TICKET.updated_by%TYPE;
 BEGIN
-  FOR i IN 1..30 LOOP
+  FOR i IN 1..300 LOOP
     -- Generate random values for site, user, and assigned_to
     v_site_id := TRUNC(DBMS_RANDOM.VALUE(1, 3));        -- 1 or 2 (e.g., for Cergy or Pau)
     v_user_id := TRUNC(DBMS_RANDOM.VALUE(2, 101));        -- assuming user_id between 1 and 100
@@ -583,7 +583,7 @@ DECLARE
   v_ip_address  IP_ADDRESS.ip_address%TYPE;
   v_is_dynamic  IP_ADDRESS.is_dynamic%TYPE;
 BEGIN
-  FOR i IN 1..75 LOOP
+  FOR i IN 1..750 LOOP
     -- Randomly select a network (1 or 2)
     v_network_id := TRUNC(DBMS_RANDOM.VALUE(1, 3));  -- Returns 1 or 2
     
