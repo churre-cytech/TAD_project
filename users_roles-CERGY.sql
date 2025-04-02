@@ -64,8 +64,14 @@ CREATE USER C##ACADEMIC_ADMIN_CERGY IDENTIFIED BY academicAdminCergy123;
 CREATE USER C##STUDENT_TEACHER_CERGY IDENTIFIED BY studentTeacherCergy123;
 -- Privilèges à attribuer : insertion et éventuellement consultation des tickets (que les tickets propres au user, pas de vue globale).
 
-
-
+------------------------------------------------------------------------------
+-- GRANT CREATE SESSION Pour que les USER puissent se connecter
+------------------------------------------------------------------------------
+GRANT CREATE SESSION TO C##ADMIN_CERGY;
+GRANT CREATE SESSION TO C##IT_TECH_CERGY;
+GRANT CREATE SESSION TO C##NETWORK_TECH_CERGY;
+GRANT CREATE SESSION TO C##ACADEMIC_ADMIN_CERGY;
+GRANT CREATE SESSION TO C##STUDENT_TEACHER_CERGY;
 
 ------------------------------------------------------------------------------
 -- DROP CERGY ROLE IF EXIST
