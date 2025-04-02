@@ -84,6 +84,7 @@ CREATE TABLE ASSET (
     created_at       TIMESTAMP DEFAULT SYSTIMESTAMP,
     updated_at       TIMESTAMP DEFAULT SYSTIMESTAMP,
     CONSTRAINT pk_asset PRIMARY KEY (asset_id),
+    CONSTRAINT uq_asset_serial UNIQUE (serial),
     CONSTRAINT fk_asset_type FOREIGN KEY (asset_type_id) REFERENCES ASSET_TYPE(asset_type_id),
     CONSTRAINT fk_asset_site FOREIGN KEY (site_id) REFERENCES SITE(site_id),
     CONSTRAINT fk_asset_assigned_user FOREIGN KEY (assigned_user_id) REFERENCES USER_ACCOUNT(user_id),
@@ -212,7 +213,7 @@ CREATE TABLE NETWORK (
     updated_at      TIMESTAMP DEFAULT SYSTIMESTAMP,
     CONSTRAINT pk_network PRIMARY KEY (network_id),
     CONSTRAINT fk_network_site FOREIGN KEY (site_id) REFERENCES SITE(site_id)
-) CLUSTER ip_network_cluster(network_id);
+);
 
 --------------------------------------------------------------------
 -- Table IP_ADDRESS
@@ -229,7 +230,7 @@ CREATE TABLE IP_ADDRESS (
     CONSTRAINT fk_ip_network FOREIGN KEY (network_id) REFERENCES NETWORK(network_id),
     CONSTRAINT fk_ip_asset FOREIGN KEY (asset_id) REFERENCES ASSET(asset_id),
     CONSTRAINT uq_network_ip UNIQUE (network_id, ip_address)
-) CLUSTER ip_network_cluster(network_id);
+);
 
 
 

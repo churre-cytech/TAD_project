@@ -10,13 +10,21 @@
 --DELETE FROM SITE;
 --COMMIT;
 
-INSERT INTO SITE (name, location)
-VALUES ('Cergy', '95000 Cergy');
 
-INSERT INTO SITE (name, location)
-VALUES ('Pau', '64000 Pau');
-COMMIT;
+
+BEGIN
+  INSERT INTO SITE (name, location)
+  VALUES ('Cergy', '95000 Cergy');
+
+  INSERT INTO SITE (name, location)
+  VALUES ('Pau', '64000 Pau');
+
+  COMMIT;
+  
+  DBMS_OUTPUT.PUT_LINE('Sites inserted successfully.');
+END;
 /
+
 
 
 --------------------------------------------------------------------
@@ -27,28 +35,32 @@ COMMIT;
 --DELETE FROM USER_ROLE;
 --COMMIT;
 
-INSERT INTO USER_ROLE (role_name, description)
-VALUES ('Super Administrator', 'Full control over the entire system, including configuration, security, and user management');
+BEGIN 
+  INSERT INTO USER_ROLE (role_name, description)
+  VALUES ('Super Administrator', 'Full control over the entire system, including configuration, security, and user management');
 
-INSERT INTO USER_ROLE (role_name, description)
-VALUES ('Academic Administrator', 'Manages academic aspects such as student attendance, timetables, and academic records');
+  INSERT INTO USER_ROLE (role_name, description)
+  VALUES ('Academic Administrator', 'Manages academic aspects such as student attendance, timetables, and academic records');
 
-INSERT INTO USER_ROLE (role_name, description)
-VALUES ('IT Manager', 'Oversees IT operations, including asset management, ticket handling, and maintenance supervision');
+  INSERT INTO USER_ROLE (role_name, description)
+  VALUES ('IT Manager', 'Oversees IT operations, including asset management, ticket handling, and maintenance supervision');
 
-INSERT INTO USER_ROLE (role_name, description)
-VALUES ('Technician', 'Provides technical support and maintenance; access to technical tools and troubleshooting functionalities');
+  INSERT INTO USER_ROLE (role_name, description)
+  VALUES ('Technician', 'Provides technical support and maintenance; access to technical tools and troubleshooting functionalities');
 
-INSERT INTO USER_ROLE (role_name, description) 
-VALUES ('Network manager', 'Manages networks and IP addresses');
+  INSERT INTO USER_ROLE (role_name, description) 
+  VALUES ('Network manager', 'Manages networks and IP addresses');
 
-INSERT INTO USER_ROLE (role_name, description)
-VALUES ('Employee', 'General user with limited access: can view personal information and submit support tickets');
+  INSERT INTO USER_ROLE (role_name, description)
+  VALUES ('Employee', 'General user with limited access: can view personal information and submit support tickets');
 
-INSERT INTO USER_ROLE (role_name, description)
-VALUES ('Student', 'Very restricted access, mainly read-only access to general information');
+  INSERT INTO USER_ROLE (role_name, description)
+  VALUES ('Student', 'Very restricted access, mainly read-only access to general information');
 
-COMMIT;
+  COMMIT;
+
+  DBMS_OUTPUT.PUT_LINE('User roles inserted successfully.');
+END;
 /
 
 
@@ -87,7 +99,7 @@ DECLARE
   v_phone      VARCHAR2(20);
   v_random_num NUMBER;
 BEGIN
-  FOR i IN 1..1000 LOOP
+  FOR i IN 1..20000 LOOP
     -- Génère un prénom aléatoire de 6 lettres 
     v_first_name := DBMS_RANDOM.STRING('L', 6);
     -- Génère un nom de famille aléatoire de 8 lettres majuscules
@@ -103,6 +115,8 @@ BEGIN
     -- Génère un numéro de téléphone aléatoire : "06" suivi de 8 chiffres
     v_random_num := TRUNC(DBMS_RANDOM.VALUE(10000000, 100000000));
     v_phone := '06' || TO_CHAR(v_random_num);
+    
+
     
     INSERT INTO USER_ACCOUNT (
       username,
@@ -128,6 +142,11 @@ BEGIN
       SYSTIMESTAMP,
       SYSTIMESTAMP
     );
+    
+    IF MOD(i, 1000) = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('Inserted ' || i || ' rows into USER_ACCOUNT.');
+    END IF;
+
   END LOOP;
   
   COMMIT;
@@ -247,7 +266,7 @@ BEGIN
   
   COMMIT;
   
-  --DBMS_OUTPUT.PUT_LINE('Asset types inserted successfully.');
+  DBMS_OUTPUT.PUT_LINE('Asset types inserted successfully.');
 END;
 /
 
@@ -319,7 +338,7 @@ BEGIN
   )
   RETURNING asset_id INTO v_asset_id;
   
-  DBMS_OUTPUT.PUT_LINE('Asset inserted with asset_id = ' || v_asset_id);
+  -- DBMS_OUTPUT.PUT_LINE('Asset inserted with asset_id = ' || v_asset_id);
   COMMIT;
 EXCEPTION
   WHEN NO_DATA_FOUND THEN
@@ -361,6 +380,7 @@ DECLARE
   v_serial           ASSET.serial%TYPE;
   v_purchase_date    ASSET.purchase_date%TYPE;
   v_random_num       NUMBER;
+  v_count            NUMBER;
   v_days_offset      NUMBER;
   v_site_id          ASSET.site_id%TYPE;
   v_status           ASSET.status%TYPE;
@@ -368,17 +388,24 @@ DECLARE
   v_assigned_user_id ASSET.assigned_user_id%TYPE;
   v_rand_status      NUMBER;
 BEGIN
-  FOR i IN 1..1000 LOOP
+  FOR i IN 1..25000 LOOP
     -- Generate a random asset type id (assumes IDs 1 to 10 exist)
     v_asset_type_id := TRUNC(DBMS_RANDOM.VALUE(1, 11));
     
     -- Generate a random asset name (e.g., "Asset_ABCDE")
     v_name := 'Asset_' || DBMS_RANDOM.STRING('U', 5);
     
-    -- Generate a random serial number (e.g., "SN-123456")
-    v_random_num := TRUNC(DBMS_RANDOM.VALUE(100000, 1000000));
-    v_serial := 'SN-' || TO_CHAR(v_random_num);
-    
+    LOOP
+      v_random_num := TRUNC(DBMS_RANDOM.VALUE(100000, 1000000));
+      v_serial := 'SN-' || DBMS_RANDOM.STRING('X', 8) || TO_CHAR(v_random_num);
+
+      SELECT COUNT(*) INTO v_count 
+      FROM asset 
+      WHERE serial = v_serial;
+
+      EXIT WHEN v_count = 0;
+    END LOOP;    
+
     -- Generate a random purchase date by adding a random number of days to a base date
     v_days_offset := TRUNC(DBMS_RANDOM.VALUE(0, 1500));
     v_purchase_date := v_base_date + v_days_offset;
@@ -386,11 +413,11 @@ BEGIN
     -- Randomly assign a site_id (either 1 or 2)
     v_site_id := TRUNC(DBMS_RANDOM.VALUE(1, 3));
     
-    -- For assigned_user_id: 50% chance to assign a random user (between 1 and 100) or leave NULL
-    IF DBMS_RANDOM.VALUE(0,1) < 0.5 THEN
+    -- For assigned_user_id: 10% chance to assign NULL, otherwise assign a random user (between 1 and 10000)
+    IF DBMS_RANDOM.VALUE(0,1) < 0.1 THEN
       v_assigned_user_id := NULL;
     ELSE
-      v_assigned_user_id := TRUNC(DBMS_RANDOM.VALUE(1, 101));
+      v_assigned_user_id := TRUNC(DBMS_RANDOM.VALUE(1, 20001));
     END IF;
     
     -- 80% chance 'active', 10% chance 'maintenance', 10% chance 'decommissioned'
@@ -427,12 +454,16 @@ BEGIN
     )
     RETURNING asset_id INTO v_asset_id;
     
-    DBMS_OUTPUT.PUT_LINE('Inserted asset ' || v_name || 
-                        ' with asset_id = ' || v_asset_id || 
-                        ', asset_type_id = ' || v_asset_type_id ||
-                        ', site_id = ' || v_site_id ||
-                        ', assigned_user_id = ' || NVL(TO_CHAR(v_assigned_user_id), 'NULL') ||
-                        ', status = ' || v_status);
+    -- DBMS_OUTPUT.PUT_LINE('Inserted asset ' || v_name || 
+    --                     ' with asset_id = ' || v_asset_id || 
+    --                     ', asset_type_id = ' || v_asset_type_id ||
+    --                     ', site_id = ' || v_site_id ||
+    --                     ', assigned_user_id = ' || NVL(TO_CHAR(v_assigned_user_id), 'NULL') ||
+    --                     ', status = ' || v_status);
+    IF MOD(i, 1000) = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('Inserted ' || i || ' rows into ASSET.');
+    END IF;
+
   END LOOP;
   
   COMMIT;
@@ -468,11 +499,11 @@ DECLARE
   v_assigned_to       TICKET.assigned_to%TYPE;
   v_updated_by        TICKET.updated_by%TYPE;
 BEGIN
-  FOR i IN 1..300 LOOP
+  FOR i IN 1..1500 LOOP
     -- Generate random values for site, user, and assigned_to
     v_site_id := TRUNC(DBMS_RANDOM.VALUE(1, 3));        -- 1 or 2 (e.g., for Cergy or Pau)
-    v_user_id := TRUNC(DBMS_RANDOM.VALUE(2, 101));        -- assuming user_id between 1 and 100
-    v_assigned_to := TRUNC(DBMS_RANDOM.VALUE(2, 51));     -- assuming assigned_to between 1 and 50
+    v_user_id := TRUNC(DBMS_RANDOM.VALUE(1, 20001));        -- assuming user_id between 1 and 20000
+    v_assigned_to := TRUNC(DBMS_RANDOM.VALUE(1, 251));     -- assuming assigned_to between 1 and 250 (250 IT Tech)
 
     -- Set subject and description with sample text
     v_subject := 'Ticket ' || i || ': Hardware Issue';
@@ -493,19 +524,23 @@ BEGIN
                     WHEN 3 THEN 'high'
                   END;
 
-    v_creation_date := SYSDATE;
-    v_updated_date := SYSDATE;
+    v_creation_date := DATE '2020-01-01' + TRUNC(DBMS_RANDOM.VALUE(0, 1000));
+    v_updated_date := v_creation_date + TRUNC(DBMS_RANDOM.VALUE(0, 31));
 
-    -- If the status is 'closed', generate a random resolution date between creation_date and creation_date + 30 days.
-    -- Otherwise, leave resolution date as NULL.
+    -- If the ticket is closed, set the resolution date to be the updated date plus a random number of days (between 1 and 30)
     IF v_status = 'closed' THEN
-      v_resolution_date := v_creation_date + TRUNC(DBMS_RANDOM.VALUE(1, 31));
+      v_resolution_date := v_updated_date + TRUNC(DBMS_RANDOM.VALUE(1, 31));
     ELSE
       v_resolution_date := NULL;
     END IF;
 
-    -- Assume the user who creates the ticket is the one who last updated it
-    v_updated_by := v_user_id;
+    -- Assign v_updated_by with 75% probability to v_assigned_to, else v_user_id
+    IF DBMS_RANDOM.VALUE(0,1) < 0.75 THEN
+      v_updated_by := v_assigned_to;
+    ELSE
+      v_updated_by := v_user_id;
+    END IF;
+
 
     INSERT INTO TICKET (
       user_id, 
@@ -534,10 +569,15 @@ BEGIN
       v_updated_by
     )
     RETURNING ticket_id INTO v_ticket_id;
+
+    IF MOD(i, 100) = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('Inserted ' || i || ' rows into TICKET.');
+    END IF;
+
   END LOOP;
-  
-  DBMS_OUTPUT.PUT_LINE('Last ticket inserted with ticket_id = ' || v_ticket_id);
+      
   COMMIT;
+  DBMS_OUTPUT.PUT_LINE('All tckets inserted successfully.');
 EXCEPTION
   WHEN OTHERS THEN
     ROLLBACK;
@@ -583,7 +623,7 @@ DECLARE
   v_ip_address  IP_ADDRESS.ip_address%TYPE;
   v_is_dynamic  IP_ADDRESS.is_dynamic%TYPE;
 BEGIN
-  FOR i IN 1..750 LOOP
+  FOR i IN 1..22000 LOOP
     -- Randomly select a network (1 or 2)
     v_network_id := TRUNC(DBMS_RANDOM.VALUE(1, 3));  -- Returns 1 or 2
     
@@ -595,10 +635,10 @@ BEGIN
     END IF;
     
     -- For asset_id: 50% chance to leave it NULL or assign a random asset id between 1 and 100
-    IF DBMS_RANDOM.VALUE(0,1) < 0.5 THEN
+    IF DBMS_RANDOM.VALUE(0,1) < 0.15 THEN
       v_asset_id := NULL;
     ELSE
-      v_asset_id := TRUNC(DBMS_RANDOM.VALUE(1, 101));
+      v_asset_id := TRUNC(DBMS_RANDOM.VALUE(1, 25001));
     END IF;
     
     -- Generate a random IP address based on the selected network
@@ -630,9 +670,13 @@ BEGIN
     )
     RETURNING ip_id INTO v_ip_id;
     
-    DBMS_OUTPUT.PUT_LINE('Inserted IP address ' || v_ip_address || 
-                          ' (ip_id = ' || v_ip_id || 
-                          ') for network ' || v_network_id);
+    -- DBMS_OUTPUT.PUT_LINE('Inserted IP address ' || v_ip_address || 
+    --                       ' (ip_id = ' || v_ip_id || 
+    --                       ') for network ' || v_network_id);
+    IF MOD(i, 1000) = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('Inserted ' || i || ' rows into IP_ADDRESS.');
+    END IF;
+
   END LOOP;
   
   COMMIT;

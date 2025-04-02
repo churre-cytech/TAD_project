@@ -1,0 +1,75 @@
+###############################################
+## SANS INDEX
+###############################################
+"PLAN_TABLE_OUTPUT"
+"Plan hash value: 786971291"
+" "
+"-------------------------------------------------------------------------------------------------------------------"
+"| Id  | Operation                            | Name                       | Rows  | Bytes | Cost (%CPU)| Time     |"
+"-------------------------------------------------------------------------------------------------------------------"
+"|   0 | SELECT STATEMENT                     |                            |   486 |  1029K|     5   (0)| 00:00:01 |"
+"|   1 |  INLIST ITERATOR                     |                            |       |       |            |          |"
+"|*  2 |   TABLE ACCESS BY INDEX ROWID BATCHED| TICKET                     |   486 |  1029K|     5   (0)| 00:00:01 |"
+"|*  3 |    INDEX RANGE SCAN                  | IDX_TICKET_STATUS_PRIORITY |     6 |       |     2   (0)| 00:00:01 |"
+"-------------------------------------------------------------------------------------------------------------------"
+" "
+"Predicate Information (identified by operation id):"
+"---------------------------------------------------"
+" "
+"   2 - filter(""CREATION_DATE""<TO_DATE(' 2021-05-19 00:00:00', 'syyyy-mm-dd hh24:mi:ss'))"
+"   3 - access(""STATUS""='open' OR ""STATUS""='pending')"
+" "
+"Note"
+"-----"
+"   - dynamic statistics used: dynamic sampling (level=2)"
+
+
+
+###############################################
+## AVEC INDEX IDX_TICKET_CREATION_DATE_STATUS
+###############################################
+"PLAN_TABLE_OUTPUT"
+"Plan hash value: 2356164716"
+" "
+"-----------------------------------------------------------------------------------------------------------------------"
+"| Id  | Operation                           | Name                            | Rows  | Bytes | Cost (%CPU)| Time     |"
+"-----------------------------------------------------------------------------------------------------------------------"
+"|   0 | SELECT STATEMENT                    |                                 |   486 |  1029K|    14   (0)| 00:00:01 |"
+"|   1 |  TABLE ACCESS BY INDEX ROWID BATCHED| TICKET                          |   486 |  1029K|    14   (0)| 00:00:01 |"
+"|*  2 |   INDEX RANGE SCAN                  | IDX_TICKET_CREATION_DATE_STATUS |     7 |       |     6   (0)| 00:00:01 |"
+"-----------------------------------------------------------------------------------------------------------------------"
+" "
+"Predicate Information (identified by operation id):"
+"---------------------------------------------------"
+" "
+"   2 - access(""CREATION_DATE""<TO_DATE(' 2021-05-19 00:00:00', 'syyyy-mm-dd hh24:mi:ss'))"
+"       filter(""STATUS""='open' OR ""STATUS""='pending')"
+" "
+"Note"
+"-----"
+"   - dynamic statistics used: dynamic sampling (level=2)"
+
+
+###############################################
+## AVEC INDEX IDX_TICKET_CREATION_DATE
+###############################################
+"PLAN_TABLE_OUTPUT"
+"Plan hash value: 3324701543"
+" "
+"----------------------------------------------------------------------------------------------------------------"
+"| Id  | Operation                           | Name                     | Rows  | Bytes | Cost (%CPU)| Time     |"
+"----------------------------------------------------------------------------------------------------------------"
+"|   0 | SELECT STATEMENT                    |                          |   486 |  1029K|    14   (0)| 00:00:01 |"
+"|   1 |  TABLE ACCESS BY INDEX ROWID BATCHED| TICKET                   |   486 |  1029K|    14   (0)| 00:00:01 |"
+"|*  2 |   INDEX RANGE SCAN                  | IDX_TICKET_CREATION_DATE |     7 |       |     6   (0)| 00:00:01 |"
+"----------------------------------------------------------------------------------------------------------------"
+" "
+"Predicate Information (identified by operation id):"
+"---------------------------------------------------"
+" "
+"   2 - access(""CREATION_DATE""<TO_DATE(' 2021-05-19 00:00:00', 'syyyy-mm-dd hh24:mi:ss'))"
+"       filter(""STATUS""='open' OR ""STATUS""='pending')"
+" "
+"Note"
+"-----"
+"   - dynamic statistics used: dynamic sampling (level=2)"
