@@ -1,26 +1,27 @@
 ------------------------------------------------------------------------------
 -- QUERY TO RETRIEVE INDEXES OF A GIVEN TABLE
 ------------------------------------------------------------------------------
-SELECT index_name, table_name 
-FROM dba_indexes 
-WHERE table_name = 'ASSET_TYPE';
+-- SELECT index_name, table_name 
+-- FROM dba_indexes 
+-- WHERE table_name = 'ASSET_TYPE';
 ------------------------------------------------------------------------------
 -- QUERY TO RETRIEVE INDEXES WITH ASSOCIATED TABLESPACE
 ------------------------------------------------------------------------------
-SELECT index_name, tablespace_name 
-FROM user_indexes;
+-- SELECT index_name, tablespace_name 
+-- FROM user_indexes;
 
 
 
 ------------------------------------------------------------------------------
 -- DROP INDEX IF EXIST
 ------------------------------------------------------------------------------
-DROP INDEX idx_asset_purchase_date;
-DROP INDEX idx_asset_assigned_user_id;
-DROP INDEX idx_asset_name;
-DROP INDEX idx_ipasset_asset;
-DROP INDEX idx_ticket_user;
-DROP INDEX idx_ticket_assigned_to_status;
+DROP INDEX idx_asset_purchase_date_cergy;
+DROP INDEX idx_asset_assigned_user_id_cergy;
+DROP INDEX idx_asset_name_cergy;
+DROP INDEX idx_ipasset_asset_cergy;
+DROP INDEX idx_ticket_user_cergy;
+DROP INDEX idx_ticket_assigned_to_status_cergy;
+
 
 
 ------------------------------------------------------------------------------
@@ -39,6 +40,7 @@ CREATE TABLESPACE cergy_indexes
     EXTENT MANAGEMENT LOCAL AUTOALLOCATE;
 
 
+
 ------------------------------------------------------------------------------
 -- ALTER EXISTANT INDEXES TO TABLESPACE cergy_indexes (CONSTRAINT CREATED IN tables creation)
 ------------------------------------------------------------------------------
@@ -54,6 +56,35 @@ ALTER INDEX PK_IP_ADDRESS REBUILD TABLESPACE cergy_indexes;
 ALTER INDEX UQ_NETWORK_IP REBUILD TABLESPACE cergy_indexes;
 ALTER INDEX PK_TICKET REBUILD TABLESPACE cergy_indexes;
 ALTER INDEX UQ_ASSET_SERIAL REBUILD TABLESPACE cergy_indexes;
+
+
+
+------------------------------------------------------------------------------
+-- USEFUL INDEXES
+------------------------------------------------------------------------------
+CREATE INDEX idx_asset_purchase_date_cergy
+    ON ASSET(purchase_date)
+    TABLESPACE cergy_indexes;
+CREATE INDEX idx_asset_assigned_user_id_cergy
+    ON ASSET(assigned_user_id)
+    TABLESPACE cergy_indexes;
+CREATE INDEX idx_asset_name_cergy
+    ON ASSET(name)
+    TABLESPACE cergy_indexes;
+CREATE INDEX idx_ipasset_asset_cergy
+    ON IP_ADDRESS(asset_id)
+    TABLESPACE cergy_indexes;
+CREATE INDEX idx_ticket_user_cergy 
+    ON TICKET(user_id)
+    TABLESPACE cergy_indexes;
+CREATE INDEX idx_ticket_assigned_to_status_cergy
+    ON TICKET(assigned_to, status)
+    TABLESPACE cergy_indexes;
+
+
+
+
+
 
 
 ------------------------------------------------------------------------------
@@ -108,9 +139,9 @@ ALTER INDEX UQ_ASSET_SERIAL REBUILD TABLESPACE cergy_indexes;
 -- ################################################
 -- ## INDEX ON PURCHASE_DATE (USEFUL)
 -- ################################################
-CREATE INDEX idx_asset_purchase_date
-    ON ASSET(purchase_date)
-    TABLESPACE cergy_indexes;
+-- CREATE INDEX idx_asset_purchase_date
+--     ON ASSET(purchase_date)
+--     TABLESPACE cergy_indexes;
 
 
 -- ################################################
@@ -126,9 +157,9 @@ CREATE INDEX idx_asset_purchase_date
 -- ################################################
 -- ## INDEX ON ASSIGNED_USER_ID (USEFUL)
 -- ################################################
-CREATE INDEX idx_asset_assigned_user_id 
-    ON ASSET(assigned_user_id)
-    TABLESPACE cergy_indexes;
+-- CREATE INDEX idx_asset_assigned_user_id 
+--     ON ASSET(assigned_user_id)
+--     TABLESPACE cergy_indexes;
 
 
 -- ################################################
@@ -144,9 +175,9 @@ CREATE INDEX idx_asset_assigned_user_id
 -- ################################################
 -- ## INDEX ON NAME (USEFUL)
 -- ################################################
-CREATE INDEX idx_asset_name 
-    ON ASSET(name)
-    TABLESPACE cergy_indexes;
+-- CREATE INDEX idx_asset_name 
+--     ON ASSET(name)
+--     TABLESPACE cergy_indexes;
 
 
 
@@ -156,9 +187,9 @@ CREATE INDEX idx_asset_name
 -- ################################################
 -- ## INDEX ON ASSET_ID (USEFUL)
 -- ################################################
-CREATE INDEX idx_ipasset_asset
-    ON IP_ADDRESS(asset_id)
-    TABLESPACE cergy_indexes;
+-- CREATE INDEX idx_ipasset_asset
+--     ON IP_ADDRESS(asset_id)
+--     TABLESPACE cergy_indexes;
 
 
 -- ################################################
@@ -178,17 +209,17 @@ CREATE INDEX idx_ipasset_asset
 -- ################################################
 -- ## INDEX ON USER_ID (USEFUL)
 -- ################################################
-CREATE INDEX idx_ticket_user 
-    ON TICKET(user_id)
-    TABLESPACE cergy_indexes;
+-- CREATE INDEX idx_ticket_user 
+--     ON TICKET(user_id)
+--     TABLESPACE cergy_indexes;
 
 
 -- ################################################
 -- ## INDEX ON ASSIGNED_TO and STATUS (USEFUL)
 -- ################################################
-CREATE INDEX idx_ticket_assigned_to_status
-    ON TICKET(assigned_to, status)
-    TABLESPACE cergy_indexes;
+-- CREATE INDEX idx_ticket_assigned_to_status
+--     ON TICKET(assigned_to, status)
+--     TABLESPACE cergy_indexes;
 
 
 -- ################################################
@@ -238,10 +269,3 @@ CREATE INDEX idx_ticket_assigned_to_status
 -- CREATE INDEX idx_ticket_creation_date
 --     ON TICKET(creation_date, status)
 --     TABLESPACE cergy_indexes;
-
-
-
-
-    
-
-
