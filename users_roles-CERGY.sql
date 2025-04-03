@@ -1,38 +1,21 @@
 ------------------------------------------------------------------------------
 -- Commands to check configuration
 ------------------------------------------------------------------------------
-SELECT username FROM dba_users;
-SELECT pdb_name FROM dba_pdbs;
-SELECT role FROM dba_roles;
+-- SELECT username FROM dba_users;
+-- SELECT pdb_name FROM dba_pdbs;
+-- SELECT role FROM dba_roles;
 
 -- Check CDB (container database)
-SHOW CON_NAME;
-SELECT sys_context('USERENV', 'CON_NAME') AS current_container FROM dual;
+-- SHOW CON_NAME;
+-- SELECT sys_context('USERENV', 'CON_NAME') AS current_container FROM dual;
+
+-- Check tablespaces
+-- SELECT table_name, tablespace_name
+--     FROM user_tables;
 
 
 
-
-------------------------------------------------------------------------------
--- DROP USER CY_TECH_CERGY IF EXISTS
-------------------------------------------------------------------------------
-DROP USER CY_TECH_CERGY CASCADE;
-
-------------------------------------------------------------------------------
--- Création de l'utilisateur CY_TECH_CERGY (FIRST TO CREATE)
-------------------------------------------------------------------------------
-CREATE USER CY_TECH_CERGY
-    IDENTIFIED BY cergy123
-    DEFAULT TABLESPACE USERS       -- Remplacez USERS par le tablespace de données approprié
-    TEMPORARY TABLESPACE TEMP      -- Remplacez TEMP par le tablespace temporaire de votre environnement
-    QUOTA UNLIMITED ON USERS;        -- Ajustez le quota selon vos besoins
-
--- Attribution des privilèges nécessaires
-GRANT DBA, RESOURCE, CONNECT TO CY_TECH_CERGY;
-
-
-
-
-------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 -- DROP CERGY USERS IF EXIST
 ------------------------------------------------------------------------------
 DROP USER ADMIN_CERGY CASCADE;
@@ -210,4 +193,3 @@ GRANT ROLE_ACADEMIC_ADMIN_CERGY TO ACADEMIC_ADMIN_CERGY;
 
 -- STUDENT/TEACHER CERGY
 GRANT ROLE_STUDENT_TEACHER_CERGY TO STUDENT_TEACHER_CERGY;
-
