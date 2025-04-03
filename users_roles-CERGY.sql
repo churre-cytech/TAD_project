@@ -9,22 +9,39 @@ SELECT role FROM dba_roles;
 SHOW CON_NAME;
 SELECT sys_context('USERENV', 'CON_NAME') AS current_container FROM dual;
 
--- Check tablespaces
-SELECT table_name, tablespace_name
-    FROM user_tables;
 
 
 
------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+-- DROP USER CY_TECH_CERGY IF EXISTS
+------------------------------------------------------------------------------
+DROP USER CY_TECH_CERGY CASCADE;
+
+------------------------------------------------------------------------------
+-- Création de l'utilisateur CY_TECH_CERGY (FIRST TO CREATE)
+------------------------------------------------------------------------------
+CREATE USER CY_TECH_CERGY
+    IDENTIFIED BY cergy123
+    DEFAULT TABLESPACE USERS       -- Remplacez USERS par le tablespace de données approprié
+    TEMPORARY TABLESPACE TEMP      -- Remplacez TEMP par le tablespace temporaire de votre environnement
+    QUOTA UNLIMITED ON USERS;        -- Ajustez le quota selon vos besoins
+
+-- Attribution des privilèges nécessaires
+GRANT DBA, RESOURCE, CONNECT TO CY_TECH_CERGY;
+
+
+
+
+------------------------------------------------------------------------------
 -- DROP CERGY USERS IF EXIST
 ------------------------------------------------------------------------------
 DROP USER ADMIN_CERGY CASCADE;
-DROP USER IT_MANAGER_TECH_CERGY CASCADE;
 DROP USER IT_TECH_CERGY CASCADE;
 DROP USER NETWORK_TECH_CERGY CASCADE;
 DROP USER ACADEMIC_ADMIN_CERGY CASCADE;
 DROP USER STUDENT_TEACHER_CERGY CASCADE;
 /
+
 ------------------------------------------------------------------------------
 -- DROP CERGY ROLE IF EXIST
 ------------------------------------------------------------------------------
@@ -77,6 +94,7 @@ CREATE USER CY_TECH_CERGY
 -- Attribution des privilèges nécessaires à l'utilisateur
 ------------------------------------------------------------------------------
 GRANT DBA, RESOURCE, CONNECT TO CY_TECH_CERGY;
+GRANT CREATE VIEW TO CY_TECH_CERGY;
 /
 
 
@@ -178,7 +196,7 @@ GRANT SELECT, INSERT ON CY_TECH_CERGY.TICKET TO ROLE_STUDENT_TEACHER_CERGY;
 GRANT ROLE_ADMIN_CERGY TO ADMIN_CERGY;
 
 -- IT TECH CERGY
-GRANT ROLE_IT_MANAGER_TECH_CERGY TO IT_MANAGER_TECH_CERGY;
+GRANT ROLE_IT_TECH_CERGY TO IT_MANAGER_TECH_CERGY;
 GRANT ROLE_IT_TECH_CERGY TO IT_TECH_CERGY;
 
 -- NETWORK IT CERGY
@@ -189,3 +207,11 @@ GRANT ROLE_ACADEMIC_ADMIN_CERGY TO ACADEMIC_ADMIN_CERGY;
 
 -- STUDENT/TEACHER CERGY
 GRANT ROLE_STUDENT_TEACHER_CERGY TO STUDENT_TEACHER_CERGY;
+
+CREATE USER CY_TECH_ADMIN IDENTIFIED BY admin123;
+GRANT ROLE_ADMIN_CERGY TO CY_TECH_ADMIN;
+GRANT ROLE_ADMIN_PAU TO CY_TECH_ADMIN;
+GRANT CREATE SESSION TO CY_TECH_ADMIN;
+GRANT DBA, RESOURCE, CONNECT TO CY_TECH_ADMIN;
+GRANT SELECT, INSERT, UPDATE, DELETE ON CY_TECH_CERGY.view_state_asset_user TO CY_TECH_ADMIN;
+GRANT SELECT, INSERT, UPDATE, DELETE ON CY_TECH_PAU.view_state_asset_user TO CY_TECH_ADMIN;
