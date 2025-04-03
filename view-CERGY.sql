@@ -60,16 +60,16 @@ END;
 /
 
 -----------------------------------------------------------
--- VIEW : Afficher l’état du matériel affecté à chaque utilisateur (POUR TECHNICIEN)
+-- VIEW : Afficher l’état du matériel affecté à chaque utilisateur (POUR TECHNICIEN IT)
 -----------------------------------------------------------
 
 CREATE OR REPLACE VIEW C##CY_TECH_CERGY.view_state_asset_user AS
 SELECT 
-    u.USER_ID AS id_utilisateur,
+    u.USER_ID AS user_ID,
     u.FIRST_NAME || ' ' || u.LAST_NAME AS username,
-    a.ASSET_ID AS id_materiel,
-    a.NAME AS nom_materiel,
-    a.STATUS AS etat,
+    a.ASSET_ID AS id_asset,
+    a.NAME AS name_asset,
+    a.STATUS AS state,
     s.NAME AS site
 FROM C##CY_TECH_CERGY.USER_ACCOUNT u
 JOIN C##CY_TECH_CERGY.ASSET a ON a.ASSIGNED_USER_ID = u.USER_ID
