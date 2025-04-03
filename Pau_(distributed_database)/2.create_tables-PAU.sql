@@ -1,3 +1,26 @@
+-- #####################################################################################
+-- CREATE CLUSTER BEFORE TABLES CREATION
+-- #####################################################################################
+-- Drop the tablespace (if needed) along with its contents and datafiles.
+DROP TABLESPACE pau_cluster INCLUDING CONTENTS AND DATAFILES;
+
+-- Create the tablespace for clusters
+CREATE TABLESPACE pau_cluster
+    DATAFILE 'pau_cluster.dbf' SIZE 100M
+    EXTENT MANAGEMENT LOCAL AUTOALLOCATE;
+
+
+--------------------------------------------------------------------------------------------
+-- Create the cluster for network_id in the existing tablespace pau_cluster
+--------------------------------------------------------------------------------------------
+CREATE CLUSTER network_cluster_pau (network_id NUMBER)
+    TABLESPACE pau_cluster
+    SIZE 512;
+
+CREATE INDEX idx_cluster_network_id_pau ON CLUSTER network_cluster_pau;
+
+
+
 --------------------------------------------------------------------
 -- DROP TABLES
 --------------------------------------------------------------------
@@ -9,6 +32,8 @@ DROP TABLE ASSET CASCADE CONSTRAINTS;
 DROP TABLE NETWORK CASCADE CONSTRAINTS;
 DROP TABLE IP_ADDRESS CASCADE CONSTRAINTS;
 DROP TABLE TICKET CASCADE CONSTRAINTS;
+
+
 
 --------------------------------------------------------------------
 -- Création des tables (ATTENTION : Veuillez être connecté dans la base de données de PAU)
@@ -60,7 +85,7 @@ CREATE TABLE USER_ACCOUNT (
     CONSTRAINT fk_user_site FOREIGN KEY (site_id) REFERENCES SITE(site_id),
     CONSTRAINT fk_user_role FOREIGN KEY (role_id) REFERENCES USER_ROLE(role_id)
 );
--- CLUSTER user_asset_cluster_cergy (site_id);
+
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 -- INFORMATION ABOUT HARDWARE ASSETS
@@ -100,7 +125,6 @@ CREATE TABLE ASSET (
     CONSTRAINT fk_asset_assigned_user FOREIGN KEY (assigned_user_id) REFERENCES USER_ACCOUNT(user_id),
     CONSTRAINT chk_asset_status CHECK (status IN ('active','maintenance','decommissioned'))
 );
--- CLUSTER user_asset_cluster_cergy (site_id);
 
 --------------------------------------------------------------------
 -- Table NETWORK
@@ -116,7 +140,8 @@ CREATE TABLE NETWORK (
     updated_at      TIMESTAMP DEFAULT SYSTIMESTAMP,
     CONSTRAINT pk_network PRIMARY KEY (network_id),
     CONSTRAINT fk_network_site FOREIGN KEY (site_id) REFERENCES SITE(site_id)
-);
+)
+CLUSTER network_cluster_pau(network_id);
 
 --------------------------------------------------------------------
 -- Table IP_ADDRESS
@@ -133,7 +158,8 @@ CREATE TABLE IP_ADDRESS (
     CONSTRAINT fk_ip_network FOREIGN KEY (network_id) REFERENCES NETWORK(network_id),
     CONSTRAINT fk_ip_asset FOREIGN KEY (asset_id) REFERENCES ASSET(asset_id),
     CONSTRAINT uq_network_ip UNIQUE (network_id, ip_address)
-);
+)
+CLUSTER network_cluster_pau(network_id);
 
 --------------------------------------------------------------------
 -- Table TICKET

@@ -1,3 +1,29 @@
+-- #####################################################################################
+-- CREATE CLUSTER BEFORE TABLES CREATION
+-- #####################################################################################
+-- Drop the tablespace (if needed) along with its contents and datafiles.
+DROP TABLESPACE cergy_cluster INCLUDING CONTENTS AND DATAFILES;
+
+-- Create the tablespace for clusters
+CREATE TABLESPACE cergy_cluster
+    DATAFILE 'cergy_cluster.dbf' SIZE 100M
+    EXTENT MANAGEMENT LOCAL AUTOALLOCATE;
+
+--------------------------------------------------------------------------------------------
+-- Create the cluster for network_id in the existing tablespace cergy_cluster
+--------------------------------------------------------------------------------------------
+CREATE CLUSTER network_cluster (network_id NUMBER)
+    TABLESPACE cergy_cluster
+    SIZE 512;
+
+CREATE INDEX idx_cluster_network_id ON CLUSTER network_cluster;
+
+
+
+
+-- #####################################################################################
+-- TABLES CREATION
+-- #####################################################################################
 --------------------------------------------------------------------
 -- Table SITE
 --------------------------------------------------------------------
@@ -14,7 +40,6 @@ CREATE TABLE SITE (
 ----------------------------------------------------------------------------------------------------------------------------------------
 -- USERS AND ROLES MANAGEMENT
 ----------------------------------------------------------------------------------------------------------------------------------------
-
 --------------------------------------------------------------------
 -- Table USER_ROLE
 --------------------------------------------------------------------
@@ -54,7 +79,6 @@ CREATE TABLE USER_ACCOUNT (
 ----------------------------------------------------------------------------------------------------------------------------------------
 -- INFORMATION ABOUT HARDWARE ASSETS
 ----------------------------------------------------------------------------------------------------------------------------------------
-
 --------------------------------------------------------------------
 -- Table ASSET_TYPE
 --------------------------------------------------------------------
@@ -197,9 +221,8 @@ CREATE TABLE ASSET (
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------
--- INFORMATION ABOUT NETWORK STRUCTURE
+-- INFORMATIONS ABOUT NETWORK STRUCTURE
 ----------------------------------------------------------------------------------------------------------------------------------------
-
 --------------------------------------------------------------------
 -- Table NETWORK
 --------------------------------------------------------------------
@@ -214,7 +237,9 @@ CREATE TABLE NETWORK (
     updated_at      TIMESTAMP DEFAULT SYSTIMESTAMP,
     CONSTRAINT pk_network PRIMARY KEY (network_id),
     CONSTRAINT fk_network_site FOREIGN KEY (site_id) REFERENCES SITE(site_id)
-);
+)
+CLUSTER network_cluster(network_id);
+
 
 --------------------------------------------------------------------
 -- Table IP_ADDRESS
@@ -231,7 +256,9 @@ CREATE TABLE IP_ADDRESS (
     CONSTRAINT fk_ip_network FOREIGN KEY (network_id) REFERENCES NETWORK(network_id),
     CONSTRAINT fk_ip_asset FOREIGN KEY (asset_id) REFERENCES ASSET(asset_id),
     CONSTRAINT uq_network_ip UNIQUE (network_id, ip_address)
-);
+)
+CLUSTER network_cluster(network_id);
+
 
 
 
