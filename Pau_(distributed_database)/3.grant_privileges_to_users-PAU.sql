@@ -1,6 +1,33 @@
-------------------------------------------------------------------------------
--- Une fois que toutes les tables sont créesn on peut attribuer les rôles sur les tables
+-- ##########################################################################################
+-- Une fois que toutes les tables sont crées, on peut attribuer les rôles sur les tables
+-- ##########################################################################################
 
+
+-- #####################################################################################
+-- (launch in CY_TECH_PAU-connnection)
+-- #####################################################################################
+------------------------------------------------------------------------------
+-- CREATE ROLE POUR LE SITE DE PAU
+------------------------------------------------------------------------------
+-- Rôle administrateur : gestion globale et supervision du site
+CREATE ROLE ROLE_ADMIN_PAU;
+
+-- Rôle IT techniciens : pour la gestion des assets (matériels) et des tickets
+CREATE ROLE ROLE_IT_TECH_PAU;
+
+-- Rôle réseau : pour la gestion des réseaux et des adresses IP
+-- (+ peut voir les assets et les assets_types existants)
+CREATE ROLE ROLE_NETWORK_TECH_PAU;
+
+-- Rôle académique administrateur : pour la gestion des comptes utilisateurs (ajout, modification, etc.) 
+-- + potentielle update des user_role. 
+CREATE ROLE ROLE_ACADEMIC_ADMIN_PAU;
+
+-- Rôle étudiants/enseignants : qui insèrent (+ consultations) des tickets
+CREATE ROLE ROLE_STUDENT_TEACHER_PAU;
+
+
+------------------------------------------------------------------------------
 -- GRANT PRIVILEGE TO ROLE
 ------------------------------------------------------------------------------
 -- ADMIN PAU
@@ -42,6 +69,7 @@ GRANT SELECT, INSERT ON CY_TECH_PAU.TICKET TO ROLE_STUDENT_TEACHER_PAU;
 GRANT ROLE_ADMIN_PAU TO ADMIN_PAU;
 
 -- IT TECH PAU
+GRANT ROLE_IT_TECH_PAU TO IT_MANAGER_TECH_PAU;
 GRANT ROLE_IT_TECH_PAU TO IT_TECH_PAU;
 
 -- NETWORK IT PAU

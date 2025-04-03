@@ -1,4 +1,6 @@
--- ATTENTION : DEPUIS LA BDD Cergy : On donne les données de Cergy à Pau
+-- #####################################################################################
+-- (launch in CY_TECH_CERGY-connnection)
+-- #####################################################################################
 
 ------------------------------------------------------------------------------
 -- RÉPLICATION : SITE
@@ -129,9 +131,5 @@ DELETE FROM CY_TECH_CERGY.USER_ACCOUNT
 WHERE site_id = (SELECT site_id FROM CY_TECH_CERGY.SITE WHERE name = 'Pau');
 
 COMMIT;
---- faire des tests (vérifier que SELECT * FROM USER_ACCOUNT WHERE site_id = 2 est bien nul car tout les élèves ont été déplacés à pau, etc.)
 
---- faire les vues adaptés (copié le meme code que celui de cergy) + les vues globales (exemple : voir tout les élèves des deux sites, pour les professeur académique)
-
--- Trouver 1 fragmentation verticale
 

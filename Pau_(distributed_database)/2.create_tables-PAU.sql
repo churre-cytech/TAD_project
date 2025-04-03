@@ -1,5 +1,5 @@
 --------------------------------------------------------------------
--- DROP TABLE : au cas ou...
+-- DROP TABLES
 --------------------------------------------------------------------
 DROP TABLE SITE CASCADE CONSTRAINTS;
 DROP TABLE USER_ROLE CASCADE CONSTRAINTS;
@@ -9,6 +9,7 @@ DROP TABLE ASSET CASCADE CONSTRAINTS;
 DROP TABLE NETWORK CASCADE CONSTRAINTS;
 DROP TABLE IP_ADDRESS CASCADE CONSTRAINTS;
 DROP TABLE TICKET CASCADE CONSTRAINTS;
+
 --------------------------------------------------------------------
 -- Création des tables (ATTENTION : Veuillez être connecté dans la base de données de PAU)
 -- Table SITE
