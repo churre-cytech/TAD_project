@@ -99,7 +99,7 @@ DECLARE
   v_phone      VARCHAR2(20);
   v_random_num NUMBER;
 BEGIN
-  FOR i IN 1..20000 LOOP
+  FOR i IN 1..4500 LOOP
     -- Génère un prénom aléatoire de 6 lettres 
     v_first_name := DBMS_RANDOM.STRING('L', 6);
     -- Génère un nom de famille aléatoire de 8 lettres majuscules
@@ -388,7 +388,7 @@ DECLARE
   v_assigned_user_id ASSET.assigned_user_id%TYPE;
   v_rand_status      NUMBER;
 BEGIN
-  FOR i IN 1..25000 LOOP
+  FOR i IN 1..5000 LOOP
     -- Generate a random asset type id (assumes IDs 1 to 10 exist)
     v_asset_type_id := TRUNC(DBMS_RANDOM.VALUE(1, 11));
     
@@ -413,11 +413,24 @@ BEGIN
     -- Randomly assign a site_id (either 1 or 2)
     v_site_id := TRUNC(DBMS_RANDOM.VALUE(1, 3));
     
-    -- For assigned_user_id: 10% chance to assign NULL, otherwise assign a random user (between 1 and 10000)
+    -- Pour assigned_user_id : 10% de chance d'être NULL, sinon sélection d'un user_id aléatoire
     IF DBMS_RANDOM.VALUE(0,1) < 0.1 THEN
       v_assigned_user_id := NULL;
     ELSE
-      v_assigned_user_id := TRUNC(DBMS_RANDOM.VALUE(1, 20001));
+      BEGIN
+        SELECT user_id
+          INTO v_assigned_user_id
+          FROM (
+            SELECT user_id
+              FROM USER_ACCOUNT
+            WHERE site_id = v_site_id
+            ORDER BY DBMS_RANDOM.VALUE
+          )
+        WHERE ROWNUM = 1;
+      EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+          v_assigned_user_id := NULL; -- si aucun user n'existe pour ce site
+      END;
     END IF;
     
     -- 80% chance 'active', 10% chance 'maintenance', 10% chance 'decommissioned'
@@ -498,26 +511,59 @@ DECLARE
   v_resolution_date   TICKET.resolution_date%TYPE;
   v_assigned_to       TICKET.assigned_to%TYPE;
   v_updated_by        TICKET.updated_by%TYPE;
+  v_rand_status       NUMBER;
 BEGIN
   FOR i IN 1..1500 LOOP
-    -- Generate random values for site, user, and assigned_to
-    v_site_id := TRUNC(DBMS_RANDOM.VALUE(1, 3));        -- 1 or 2 (e.g., for Cergy or Pau)
-    v_user_id := TRUNC(DBMS_RANDOM.VALUE(1, 20001));        -- assuming user_id between 1 and 20000
-    v_assigned_to := TRUNC(DBMS_RANDOM.VALUE(1, 251));     -- assuming assigned_to between 1 and 250 (250 IT Tech)
+    -- Affecter aléatoirement le site_id (1 ou 2)
+    v_site_id := TRUNC(DBMS_RANDOM.VALUE(1, 3));
 
-    -- Set subject and description with sample text
+    BEGIN
+      SELECT user_id
+        INTO v_user_id
+        FROM (
+          SELECT user_id
+            FROM USER_ACCOUNT
+            WHERE site_id = v_site_id
+            ORDER BY DBMS_RANDOM.VALUE
+          )
+        WHERE ROWNUM = 1;
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        v_user_id := NULL;
+    END;
+
+    IF DBMS_RANDOM.VALUE(0,1) < 0.1 THEN
+      v_assigned_to := NULL;
+    ELSE
+      BEGIN
+        SELECT user_id
+          INTO v_assigned_to
+          FROM (
+            SELECT user_id
+              FROM USER_ACCOUNT
+              WHERE site_id = v_site_id
+              ORDER BY DBMS_RANDOM.VALUE
+            )
+          WHERE ROWNUM = 1;
+      EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+          v_assigned_to := NULL;
+      END;
+    END IF;
+    
+    -- Génération du sujet et de la description
     v_subject := 'Ticket ' || i || ': Hardware Issue';
     v_description := 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ' ||
                       'Ticket number ' || i || ': This equipment overheats after a few minutes of use.';
 
-    -- Randomly choose a valid status from the allowed set: 'open', 'pending', 'closed'
+    -- Choix aléatoire du status ('open', 'pending', 'closed')
     v_status := CASE TRUNC(DBMS_RANDOM.VALUE(1, 4))
                   WHEN 1 THEN 'open'
                   WHEN 2 THEN 'pending'
                   WHEN 3 THEN 'closed'
                 END;
 
-    -- Randomly choose a valid priority from the allowed set: 'low', 'medium', 'high'
+    -- Choix aléatoire de la priorité ('low', 'medium', 'high')
     v_priority := CASE TRUNC(DBMS_RANDOM.VALUE(1, 4))
                     WHEN 1 THEN 'low'
                     WHEN 2 THEN 'medium'
@@ -527,20 +573,17 @@ BEGIN
     v_creation_date := DATE '2020-01-01' + TRUNC(DBMS_RANDOM.VALUE(0, 1000));
     v_updated_date := v_creation_date + TRUNC(DBMS_RANDOM.VALUE(0, 31));
 
-    -- If the ticket is closed, set the resolution date to be the updated date plus a random number of days (between 1 and 30)
     IF v_status = 'closed' THEN
       v_resolution_date := v_updated_date + TRUNC(DBMS_RANDOM.VALUE(1, 31));
     ELSE
       v_resolution_date := NULL;
     END IF;
 
-    -- Assign v_updated_by with 75% probability to v_assigned_to, else v_user_id
     IF DBMS_RANDOM.VALUE(0,1) < 0.75 THEN
       v_updated_by := v_assigned_to;
     ELSE
       v_updated_by := v_user_id;
     END IF;
-
 
     INSERT INTO TICKET (
       user_id, 
@@ -573,11 +616,10 @@ BEGIN
     IF MOD(i, 100) = 0 THEN
       DBMS_OUTPUT.PUT_LINE('Inserted ' || i || ' rows into TICKET.');
     END IF;
-
   END LOOP;
-      
+  
   COMMIT;
-  DBMS_OUTPUT.PUT_LINE('All tckets inserted successfully.');
+  DBMS_OUTPUT.PUT_LINE('All tickets inserted successfully.');
 EXCEPTION
   WHEN OTHERS THEN
     ROLLBACK;
@@ -623,35 +665,49 @@ DECLARE
   v_ip_address  IP_ADDRESS.ip_address%TYPE;
   v_is_dynamic  IP_ADDRESS.is_dynamic%TYPE;
 BEGIN
-  FOR i IN 1..22000 LOOP
-    -- Randomly select a network (1 or 2)
-    v_network_id := TRUNC(DBMS_RANDOM.VALUE(1, 3));  -- Returns 1 or 2
-    
-    -- Set is_dynamic: 80% chance static (0) and 20% chance dynamic (1)
+  FOR i IN 1..4000 LOOP
+    -- Sélection aléatoire d'un network_id : 1 ou 2
+    v_network_id := TRUNC(DBMS_RANDOM.VALUE(1, 3));  -- Retourne 1 ou 2
+
+    -- Définir is_dynamic : 80% statique (0), 20% dynamique (1)
     IF DBMS_RANDOM.VALUE(0,1) < 0.8 THEN
       v_is_dynamic := 0;
     ELSE
       v_is_dynamic := 1;
     END IF;
     
-    -- For asset_id: 50% chance to leave it NULL or assign a random asset id between 1 and 100
+    -- Pour asset_id : 15% de chance de rester NULL, sinon sélectionner un asset_id aléatoire
+    -- dont le site (site_id) correspond à v_network_id
     IF DBMS_RANDOM.VALUE(0,1) < 0.15 THEN
       v_asset_id := NULL;
     ELSE
-      v_asset_id := TRUNC(DBMS_RANDOM.VALUE(1, 25001));
+      BEGIN
+        SELECT asset_id
+          INTO v_asset_id
+          FROM (
+            SELECT asset_id 
+              FROM ASSET
+              WHERE site_id = v_network_id
+              ORDER BY DBMS_RANDOM.VALUE
+            )
+          WHERE ROWNUM = 1;
+      EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+          v_asset_id := NULL;
+      END;
     END IF;
     
-    -- Generate a random IP address based on the selected network
+    -- Génération d'une adresse IP basée sur le network_id
     IF v_network_id = 1 THEN
       v_ip_address := '192.168.1.' || i;
     ELSIF v_network_id = 2 THEN
       v_ip_address := '192.168.2.' || i;
     ELSE
-      -- Fallback (should not occur)
+      -- Cas par défaut (normalement ne doit pas arriver)
       v_ip_address := '192.168.1.' || i;
     END IF;
     
-    -- Insert into IP_ADDRESS
+    -- Insertion dans IP_ADDRESS
     INSERT INTO IP_ADDRESS (
       network_id,
       asset_id,
@@ -670,13 +726,10 @@ BEGIN
     )
     RETURNING ip_id INTO v_ip_id;
     
-    -- DBMS_OUTPUT.PUT_LINE('Inserted IP address ' || v_ip_address || 
-    --                       ' (ip_id = ' || v_ip_id || 
-    --                       ') for network ' || v_network_id);
     IF MOD(i, 1000) = 0 THEN
       DBMS_OUTPUT.PUT_LINE('Inserted ' || i || ' rows into IP_ADDRESS.');
     END IF;
-
+    
   END LOOP;
   
   COMMIT;

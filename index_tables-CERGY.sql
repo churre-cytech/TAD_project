@@ -62,6 +62,8 @@ ALTER INDEX UQ_ASSET_SERIAL REBUILD TABLESPACE cergy_indexes;
 ------------------------------------------------------------------------------
 -- USEFUL INDEXES
 ------------------------------------------------------------------------------
+
+-- ASSET
 CREATE INDEX idx_asset_purchase_date_cergy
     ON ASSET(purchase_date)
     TABLESPACE cergy_indexes;
@@ -71,16 +73,17 @@ CREATE INDEX idx_asset_assigned_user_id_cergy
 CREATE INDEX idx_asset_name_cergy
     ON ASSET(name)
     TABLESPACE cergy_indexes;
+-- IP_ADDRESS
 CREATE INDEX idx_ipasset_asset_cergy
     ON IP_ADDRESS(asset_id)
     TABLESPACE cergy_indexes;
+-- TICKET
 CREATE INDEX idx_ticket_user_cergy 
     ON TICKET(user_id)
     TABLESPACE cergy_indexes;
 CREATE INDEX idx_ticket_assigned_to_status_cergy
     ON TICKET(assigned_to, status)
     TABLESPACE cergy_indexes;
-
 
 
 

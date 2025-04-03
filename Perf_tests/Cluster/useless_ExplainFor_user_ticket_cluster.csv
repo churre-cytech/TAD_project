@@ -1,0 +1,55 @@
+###############################################
+## SANS CLUSTER
+###############################################
+"PLAN_TABLE_OUTPUT"
+"Plan hash value: 4265948130"
+" "
+"-----------------------------------------------------------------------------------"
+"| Id  | Operation          | Name         | Rows  | Bytes | Cost (%CPU)| Time     |"
+"-----------------------------------------------------------------------------------"
+"|   0 | SELECT STATEMENT   |              |   750 |   258K|   125   (0)| 00:00:01 |"
+"|*  1 |  HASH JOIN         |              |   750 |   258K|   125   (0)| 00:00:01 |"
+"|*  2 |   TABLE ACCESS FULL| TICKET       |   750 |   240K|    23   (0)| 00:00:01 |"
+"|   3 |   TABLE ACCESS FULL| USER_ACCOUNT | 20000 |   468K|   102   (0)| 00:00:01 |"
+"-----------------------------------------------------------------------------------"
+" "
+"Predicate Information (identified by operation id):"
+"---------------------------------------------------"
+" "
+"   1 - access(""T"".""USER_ID""=""U"".""USER_ID"")"
+"   2 - filter(""T"".""SITE_ID""=1)"
+
+
+
+###############################################
+## AVEC CLUSTER
+###############################################
+"PLAN_TABLE_OUTPUT"
+"Plan hash value: 4151244637"
+" "
+"---------------------------------------------------------------------------------------------------------"
+"| Id  | Operation             | Name                    | Rows  | Bytes |TempSpc| Cost (%CPU)| Time     |"
+"---------------------------------------------------------------------------------------------------------"
+"|   0 | SELECT STATEMENT      |                         |   913 |  1901K|       |   282   (0)| 00:00:01 |"
+"|*  1 |  HASH JOIN            |                         |   913 |  1901K|  1096K|   282   (0)| 00:00:01 |"
+"|   2 |   TABLE ACCESS FULL   | CLUSTERED_USER_ACCOUNT  | 21541 |   841K|       |   136   (0)| 00:00:01 |"
+"|   3 |   TABLE ACCESS CLUSTER| CLUSTERED_TICKET        |   913 |  1866K|       |     2   (0)| 00:00:01 |"
+"|*  4 |    INDEX UNIQUE SCAN  | IDX_USER_TICKET_CLUSTER |     1 |       |       |     1   (0)| 00:00:01 |"
+"---------------------------------------------------------------------------------------------------------"
+" "
+"Predicate Information (identified by operation id):"
+"---------------------------------------------------"
+" "
+"   1 - access(""CT"".""USER_ID""=""U"".""USER_ID"")"
+"   4 - access(""CT"".""SITE_ID""=1)"
+" "
+"Note"
+"-----"
+"   - dynamic statistics used: dynamic sampling (level=2)"
+
+
+CONCLUSION : 
+
+Même si le coût global estimé semble plus élevé avec le cluster,
+cela peut être dû aux différences dans les estimations de cardinalité et aux opérations de hash join qui nécessitent un espace temporaire (1096K indiqué). Dans un environnement réel, 
+avec de gros volumes et de nombreuses requêtes répétées par site, le cluster devrait apporter un gain en performances, notamment en termes de réduction des I/O.

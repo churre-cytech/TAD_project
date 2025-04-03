@@ -48,7 +48,6 @@ CREATE TABLE USER_ACCOUNT (
     CONSTRAINT fk_user_site FOREIGN KEY (site_id) REFERENCES SITE(site_id),
     CONSTRAINT fk_user_role FOREIGN KEY (role_id) REFERENCES USER_ROLE(role_id)
 );
--- CLUSTER user_asset_cluster_cergy (site_id);
 
 
 
@@ -91,7 +90,6 @@ CREATE TABLE ASSET (
     CONSTRAINT fk_asset_assigned_user FOREIGN KEY (assigned_user_id) REFERENCES USER_ACCOUNT(user_id),
     CONSTRAINT chk_asset_status CHECK (status IN ('active','maintenance','decommissioned'))
 );
--- CLUSTER user_asset_cluster_cergy (site_id);
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------

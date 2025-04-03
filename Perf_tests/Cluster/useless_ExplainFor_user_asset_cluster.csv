@@ -1,0 +1,53 @@
+###############################################
+## SANS CLUSTER
+###############################################
+"PLAN_TABLE_OUTPUT"
+"Plan hash value: 55461440"
+" "
+"-----------------------------------------------------------------------------------"
+"| Id  | Operation          | Name         | Rows  | Bytes | Cost (%CPU)| Time     |"
+"-----------------------------------------------------------------------------------"
+"|   0 | SELECT STATEMENT   |              | 11097 |   531K|   205   (1)| 00:00:01 |"
+"|*  1 |  HASH JOIN         |              | 11097 |   531K|   205   (1)| 00:00:01 |"
+"|*  2 |   TABLE ACCESS FULL| ASSET        | 11097 |   270K|   102   (0)| 00:00:01 |"
+"|   3 |   TABLE ACCESS FULL| USER_ACCOUNT | 20000 |   468K|   102   (0)| 00:00:01 |"
+"-----------------------------------------------------------------------------------"
+" "
+"Predicate Information (identified by operation id):"
+"---------------------------------------------------"
+" "
+"   1 - access(""A"".""ASSIGNED_USER_ID""=""U"".""USER_ID"")"
+"   2 - filter(""A"".""SITE_ID""=1 AND ""A"".""ASSIGNED_USER_ID"" IS NOT NULL)"
+" "
+"Note"
+"-----"
+"   - this is an adaptive plan"
+
+
+
+###############################################
+## AVEC CLUSTER
+###############################################
+"PLAN_TABLE_OUTPUT"
+"Plan hash value: 625542768"
+" "
+"-----------------------------------------------------------------------------------------------------"
+"| Id  | Operation               | Name                      | Rows  | Bytes | Cost (%CPU)| Time     |"
+"-----------------------------------------------------------------------------------------------------"
+"|   0 | SELECT STATEMENT        |                           | 11097 |   531K|   378   (1)| 00:00:01 |"
+"|*  1 |  HASH JOIN              |                           | 11097 |   531K|   378   (1)| 00:00:01 |"
+"|*  2 |   TABLE ACCESS CLUSTER  | CLUSTERED_ASSET           | 11097 |   270K|   203   (0)| 00:00:01 |"
+"|*  3 |    INDEX UNIQUE SCAN    | IDX_USER_ASSET_CLUSTER    |     1 |       |     0   (0)| 00:00:01 |"
+"|   4 |   VIEW                  | index$_join$_002          | 20000 |   468K|   174   (0)| 00:00:01 |"
+"|*  5 |    HASH JOIN            |                           |       |       |            |          |"
+"|   6 |     INDEX FAST FULL SCAN| PK_CLUSTERED_USER_ACCOUNT | 20000 |   468K|    74   (0)| 00:00:01 |"
+"|   7 |     INDEX FAST FULL SCAN| UQ_CLUSTERED_USERNAME     | 20000 |   468K|   144   (0)| 00:00:01 |"
+"-----------------------------------------------------------------------------------------------------"
+" "
+"Predicate Information (identified by operation id):"
+"---------------------------------------------------"
+" "
+"   1 - access(""A"".""ASSIGNED_USER_ID""=""U"".""USER_ID"")"
+"   2 - filter(""A"".""ASSIGNED_USER_ID"" IS NOT NULL)"
+"   3 - access(""A"".""SITE_ID""=1)"
+"   5 - access(ROWID=ROWID)"
