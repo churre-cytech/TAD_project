@@ -1,0 +1,7 @@
+CREATE OR REPLACE TRIGGER trg_asset_type_update_timestamp
+BEFORE UPDATE ON ASSET_TYPE
+FOR EACH ROW
+BEGIN
+    :NEW.updated_at := SYSTIMESTAMP;
+END;
+/

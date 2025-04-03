@@ -1,0 +1,7 @@
+CREATE OR REPLACE TRIGGER trg_user_role_update_timestamp
+BEFORE UPDATE ON USER_ROLE
+FOR EACH ROW
+BEGIN
+    :NEW.updated_at := SYSTIMESTAMP;
+END;
+/

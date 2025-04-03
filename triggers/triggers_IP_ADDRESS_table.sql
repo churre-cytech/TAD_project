@@ -1,0 +1,7 @@
+CREATE OR REPLACE TRIGGER trg_ip_address_update_timestamp
+BEFORE UPDATE ON IP_ADDRESS
+FOR EACH ROW
+BEGIN
+    :NEW.updated_at := SYSTIMESTAMP;
+END;
+/

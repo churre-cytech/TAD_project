@@ -387,6 +387,8 @@ DECLARE
   v_base_date        DATE := TO_DATE('2020-01-01','YYYY-MM-DD');
   v_assigned_user_id ASSET.assigned_user_id%TYPE;
   v_rand_status      NUMBER;
+  v_created_at       DATE;
+  v_updated_at       DATE;
 BEGIN
   FOR i IN 1..5000 LOOP
     -- Generate a random asset type id (assumes IDs 1 to 10 exist)
@@ -413,7 +415,6 @@ BEGIN
     -- Randomly assign a site_id (either 1 or 2)
     v_site_id := TRUNC(DBMS_RANDOM.VALUE(1, 3));
     
-    -- Pour assigned_user_id : 10% de chance d'être NULL, sinon sélection d'un user_id aléatoire
     IF DBMS_RANDOM.VALUE(0,1) < 0.1 THEN
       v_assigned_user_id := NULL;
     ELSE
@@ -429,11 +430,11 @@ BEGIN
         WHERE ROWNUM = 1;
       EXCEPTION
         WHEN NO_DATA_FOUND THEN
-          v_assigned_user_id := NULL; -- si aucun user n'existe pour ce site
+          v_assigned_user_id := NULL;
       END;
     END IF;
     
-    -- 80% chance 'active', 10% chance 'maintenance', 10% chance 'decommissioned'
+    -- 80% chance 'active', 10% chance 'maintenance', 10% chance 'decommissioned' and v_assigned_user_id = NULL
     v_rand_status := DBMS_RANDOM.VALUE(0,1);
     IF v_rand_status < 0.8 THEN
       v_status := 'active';
@@ -441,7 +442,11 @@ BEGIN
       v_status := 'maintenance';
     ELSE
       v_status := 'decommissioned';
+      v_assigned_user_id := NULL;
     END IF;
+
+    v_created_at := v_base_date + TRUNC(DBMS_RANDOM.VALUE(0, 1500));
+    v_updated_at := v_created_at + TRUNC(DBMS_RANDOM.VALUE(0, 31));
     
     INSERT INTO ASSET (
       asset_type_id,
@@ -462,8 +467,8 @@ BEGIN
       v_purchase_date,
       v_site_id,
       v_status,
-      SYSTIMESTAMP,
-      SYSTIMESTAMP
+      v_created_at,
+      v_updated_at
     )
     RETURNING asset_id INTO v_asset_id;
     
@@ -495,6 +500,19 @@ END;
 --------------------------------------------------------------------
 -- SELECT * FROM TICKET;
 
+-- SELECT 
+--     t.ticket_id,
+--     t.site_id AS ticket_site,
+--     ua.site_id AS creator_site,
+--     aa.site_id AS assigned_site
+-- FROM TICKET t
+-- JOIN USER_ACCOUNT ua ON t.user_id = ua.user_id
+-- LEFT JOIN USER_ACCOUNT aa ON t.assigned_to = aa.user_id
+-- WHERE NOT (
+--     ua.site_id = t.site_id
+--     AND (t.assigned_to IS NULL OR aa.site_id = t.site_id)
+-- );
+
 -- DELETE FROM TICKET;
 -- COMMIT;
 
@@ -512,11 +530,13 @@ DECLARE
   v_assigned_to       TICKET.assigned_to%TYPE;
   v_updated_by        TICKET.updated_by%TYPE;
   v_rand_status       NUMBER;
+  v_role_id           USER_ACCOUNT.role_id%TYPE;
 BEGIN
   FOR i IN 1..1500 LOOP
-    -- Affecter aléatoirement le site_id (1 ou 2)
+    -- Randomly assign a site_id (1 or 2)
     v_site_id := TRUNC(DBMS_RANDOM.VALUE(1, 3));
 
+    -- Select a random creator (user_id) for the given site
     BEGIN
       SELECT user_id
         INTO v_user_id
@@ -532,59 +552,131 @@ BEGIN
         v_user_id := NULL;
     END;
 
-    IF DBMS_RANDOM.VALUE(0,1) < 0.1 THEN
-      v_assigned_to := NULL;
-    ELSE
+    -- First, determine the creator's role
+    BEGIN
+      SELECT role_id 
+        INTO v_role_id 
+        FROM USER_ACCOUNT 
+      WHERE user_id = v_user_id;
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        v_role_id := NULL;
+    END;
+
+    -- If the creator's role is 4, assign the ticket to another user with role_id = 4 
+    -- on the same site (v_site_id) and different from the creator.
+    IF v_role_id = 4 THEN
       BEGIN
-        SELECT user_id
+        SELECT user_id 
           INTO v_assigned_to
           FROM (
-            SELECT user_id
-              FROM USER_ACCOUNT
-              WHERE site_id = v_site_id
-              ORDER BY DBMS_RANDOM.VALUE
-            )
-          WHERE ROWNUM = 1;
+                SELECT user_id
+                  FROM USER_ACCOUNT
+                  WHERE role_id = 4
+                    AND user_id <> v_user_id
+                    AND site_id = v_site_id
+                  ORDER BY DBMS_RANDOM.VALUE
+              )
+        WHERE ROWNUM = 1;
       EXCEPTION
         WHEN NO_DATA_FOUND THEN
-          v_assigned_to := NULL;
+          v_assigned_to := NULL; -- No alternative user found on the same site
       END;
+    ELSE
+      -- Otherwise, randomly assign a technician from the same site with a 10% chance to be NULL.
+      IF DBMS_RANDOM.VALUE(0,1) < 0.1 THEN
+        v_assigned_to := NULL;
+      ELSE
+        BEGIN
+          SELECT user_id
+            INTO v_assigned_to
+            FROM (
+                  SELECT user_id
+                    FROM USER_ACCOUNT
+                    WHERE site_id = v_site_id
+                    ORDER BY DBMS_RANDOM.VALUE
+                )
+          WHERE ROWNUM = 1;
+        EXCEPTION
+          WHEN NO_DATA_FOUND THEN
+            v_assigned_to := NULL;
+        END;
+      END IF;
     END IF;
     
-    -- Génération du sujet et de la description
+    -- Generate ticket subject and description
     v_subject := 'Ticket ' || i || ': Hardware Issue';
     v_description := 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ' ||
                       'Ticket number ' || i || ': This equipment overheats after a few minutes of use.';
 
-    -- Choix aléatoire du status ('open', 'pending', 'closed')
+    -- Randomly choose a ticket status ('open', 'pending', or 'closed')
     v_status := CASE TRUNC(DBMS_RANDOM.VALUE(1, 4))
                   WHEN 1 THEN 'open'
                   WHEN 2 THEN 'pending'
                   WHEN 3 THEN 'closed'
                 END;
 
-    -- Choix aléatoire de la priorité ('low', 'medium', 'high')
+    -- Randomly choose a ticket priority ('low', 'medium', or 'high')
     v_priority := CASE TRUNC(DBMS_RANDOM.VALUE(1, 4))
                     WHEN 1 THEN 'low'
                     WHEN 2 THEN 'medium'
                     WHEN 3 THEN 'high'
                   END;
 
+    -- If ticket priority is 'high' and no technician is assigned,
+    -- force an assignment to a technician from the same site (with role_id = 4)
+    IF v_priority = 'high' AND v_assigned_to IS NULL THEN
+      BEGIN
+        SELECT user_id
+          INTO v_assigned_to
+          FROM (
+                SELECT user_id
+                  FROM USER_ACCOUNT
+                  WHERE site_id = v_site_id
+                    AND role_id = 4
+                    AND user_id <> v_user_id
+                  ORDER BY DBMS_RANDOM.VALUE
+                )
+          WHERE ROWNUM = 1;
+      EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+          BEGIN
+            SELECT user_id
+              INTO v_assigned_to
+              FROM (
+                    SELECT user_id
+                      FROM USER_ACCOUNT
+                      WHERE site_id = v_site_id
+                        AND user_id <> v_user_id
+                      ORDER BY DBMS_RANDOM.VALUE
+                    )
+              WHERE ROWNUM = 1;
+          EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+              v_assigned_to := NULL;
+          END;
+      END;
+    END IF;
+
+    -- Generate random dates for creation and update
     v_creation_date := DATE '2020-01-01' + TRUNC(DBMS_RANDOM.VALUE(0, 1000));
     v_updated_date := v_creation_date + TRUNC(DBMS_RANDOM.VALUE(0, 31));
 
+    -- If status is 'closed', set resolution_date; otherwise, leave it NULL
     IF v_status = 'closed' THEN
       v_resolution_date := v_updated_date + TRUNC(DBMS_RANDOM.VALUE(1, 31));
     ELSE
       v_resolution_date := NULL;
     END IF;
 
+    -- Randomly determine updated_by (either the assigned technician or the creator)
     IF DBMS_RANDOM.VALUE(0,1) < 0.75 THEN
       v_updated_by := v_assigned_to;
     ELSE
       v_updated_by := v_user_id;
     END IF;
 
+    -- Insert the ticket into the TICKET table
     INSERT INTO TICKET (
       user_id, 
       site_id, 
@@ -613,6 +705,7 @@ BEGIN
     )
     RETURNING ticket_id INTO v_ticket_id;
 
+    -- Output progress every 100 rows inserted
     IF MOD(i, 100) = 0 THEN
       DBMS_OUTPUT.PUT_LINE('Inserted ' || i || ' rows into TICKET.');
     END IF;

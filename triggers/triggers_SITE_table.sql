@@ -1,0 +1,7 @@
+CREATE OR REPLACE TRIGGER trg_site_update_timestamp
+BEFORE UPDATE ON SITE
+FOR EACH ROW
+BEGIN
+    :NEW.updated_at := SYSTIMESTAMP;
+END;
+/
