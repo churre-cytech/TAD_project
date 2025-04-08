@@ -1,42 +1,41 @@
 -- Procedure to assign an asset to a user
-CREATE OR REPLACE PROCEDURE assign_asset_to_user(
+CREATE OR REPLACE PROCEDURE assign_asset(
     p_asset_id NUMBER,
     p_user_id NUMBER
 ) IS
-    v_asset_site_id NUMBER;
-    v_user_site_id NUMBER;
-    v_status VARCHAR2(50);
+    v_asset_status VARCHAR2(20);
+    v_asset_exists NUMBER;
+    v_user_exists NUMBER;
 BEGIN
-
-    BEGIN
-        SELECT site_id, status INTO v_asset_site_id, v_status 
-        FROM ASSET 
-        WHERE asset_id = p_asset_id;
-        
-        IF v_status != 'active' THEN
-            RAISE_APPLICATION_ERROR(-20001, 'Asset is not active and cannot be assigned');
-        END IF;
-    EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            RAISE_APPLICATION_ERROR(-20002, 'Asset not found');
-    END;
+    -- Check if asset exists
+    SELECT COUNT(*) INTO v_asset_exists 
+    FROM ASSET 
+    WHERE asset_id = p_asset_id;
     
-
-    BEGIN
-        SELECT site_id INTO v_user_site_id 
-        FROM USER_ACCOUNT 
-        WHERE user_id = p_user_id;
-    EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            RAISE_APPLICATION_ERROR(-20003, 'User not found');
-    END;
-    
-    -- Verify site consistency
-    IF v_asset_site_id != v_user_site_id THEN
-        RAISE_APPLICATION_ERROR(-20004, 'Site mismatch: Asset and user must belong to the same site');
+    IF v_asset_exists = 0 THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Asset not found');
     END IF;
     
-    -- Assign the asset
+    -- Check if user exists
+    SELECT COUNT(*) INTO v_user_exists 
+    FROM USER_ACCOUNT 
+    WHERE user_id = p_user_id;
+    
+    IF v_user_exists = 0 THEN
+        RAISE_APPLICATION_ERROR(-20003, 'User not found');
+    END IF;
+    
+    -- Get current asset status
+    SELECT status INTO v_asset_status 
+    FROM ASSET 
+    WHERE asset_id = p_asset_id;
+    
+    -- Check if asset is available for assignment
+    IF v_asset_status != 'active' THEN
+        RAISE_APPLICATION_ERROR(-20004, 'Asset is not available for assignment');
+    END IF;
+    
+    -- Update asset and assign to user (keeping status as 'active')
     UPDATE ASSET
     SET assigned_user_id = p_user_id,
         updated_at = SYSTIMESTAMP
@@ -47,55 +46,94 @@ EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;
         RAISE;
-END assign_asset_to_user;
+END assign_asset;
 /
 
--- Exemple d'exécution de la procédure assign_asset_to_user
--- BEGIN
---     assign_asset_to_user(87, 201);
---     DBMS_OUTPUT.PUT_LINE('Asset has been successfully assigned to user');
--- EXCEPTION
---     WHEN OTHERS THEN
---         DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
--- END;
--- /
-
-
--- Function to get all assets assigned to a specific user
-CREATE OR REPLACE FUNCTION get_user_assets(
-    p_user_id NUMBER
-) RETURN SYS_REFCURSOR IS
-    v_result SYS_REFCURSOR;
+-- ######################################
+-- Test assign_asset()
+-- ######################################
+-- Cas normal
 BEGIN
-    OPEN v_result FOR
-    SELECT a.asset_id, a.name, at.label AS asset_type, a.serial, a.status 
-    FROM ASSET a
-    JOIN ASSET_TYPE at ON a.asset_type_id = at.asset_type_id
-    WHERE a.assigned_user_id = p_user_id;
-    
-    RETURN v_result;
-END get_user_assets;
+    -- Déclaration des variables pour les tests
+    DECLARE
+        v_employee_id NUMBER;
+        v_asset_id NUMBER;
+    BEGIN
+        -- Sélection d'un employé de Cergy
+        SELECT ua.user_id INTO v_employee_id
+        FROM USER_ACCOUNT ua
+        JOIN USER_ROLE ur ON ua.role_id = ur.role_id
+        JOIN SITE s ON ua.site_id = s.site_id
+        WHERE ur.role_name = 'Employee' AND s.name = 'Cergy'
+        AND ROWNUM = 1;
+        
+        -- Sélection d'un actif actif de Cergy
+        SELECT a.asset_id INTO v_asset_id
+        FROM ASSET a
+        JOIN SITE s ON a.site_id = s.site_id
+        WHERE s.name = 'Cergy' AND a.status = 'active'
+        AND ROWNUM = 1;
+        
+        -- Attribution de l'actif
+        assign_asset(v_asset_id, v_employee_id);
+        DBMS_OUTPUT.PUT_LINE('Actif attribué avec succès');
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Erreur: ' || SQLERRM);
+    END;
+END;
+/
+
+-- Test avec actif inexistant
+BEGIN
+    -- Déclaration des variables pour les tests
+    DECLARE
+        v_employee_id NUMBER;
+    BEGIN
+        -- Sélection d'un employé de Cergy
+        SELECT ua.user_id INTO v_employee_id
+        FROM USER_ACCOUNT ua
+        JOIN USER_ROLE ur ON ua.role_id = ur.role_id
+        JOIN SITE s ON ua.site_id = s.site_id
+        WHERE ur.role_name = 'Employee' AND s.name = 'Cergy'
+        AND ROWNUM = 1;
+        
+        -- Tentative d'attribution d'un actif inexistant
+        assign_asset(999, v_employee_id);
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Erreur attendue: ' || SQLERRM);
+    END;
+END;
 /
 
 -- Procedure to release an asset from a user
 CREATE OR REPLACE PROCEDURE release_asset(
     p_asset_id NUMBER
 ) IS
+    v_asset_exists NUMBER;
+    v_assigned_user_id NUMBER;
 BEGIN
     -- Check if asset exists
-    DECLARE
-        v_asset_exists NUMBER;
-    BEGIN
-        SELECT COUNT(*) INTO v_asset_exists 
-        FROM ASSET 
-        WHERE asset_id = p_asset_id;
-        
-        IF v_asset_exists = 0 THEN
-            RAISE_APPLICATION_ERROR(-20002, 'Asset not found');
-        END IF;
-    END;
+    SELECT COUNT(*) INTO v_asset_exists 
+    FROM ASSET 
+    WHERE asset_id = p_asset_id;
     
-    -- Release the asset
+    IF v_asset_exists = 0 THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Asset not found');
+    END IF;
+    
+    -- Get current assigned user
+    SELECT assigned_user_id INTO v_assigned_user_id 
+    FROM ASSET 
+    WHERE asset_id = p_asset_id;
+    
+    -- Check if asset is assigned
+    IF v_assigned_user_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20005, 'Asset is not assigned to any user');
+    END IF;
+    
+    -- Release asset
     UPDATE ASSET
     SET assigned_user_id = NULL,
         updated_at = SYSTIMESTAMP
@@ -109,12 +147,49 @@ EXCEPTION
 END release_asset;
 /
 
+-- ######################################
+-- Test release_asset()
+-- ######################################
+-- Cas normal
+BEGIN
+    -- Déclaration des variables pour les tests
+    DECLARE
+        v_asset_id NUMBER;
+    BEGIN
+        -- Sélection d'un actif assigné de Cergy
+        SELECT a.asset_id INTO v_asset_id
+        FROM ASSET a
+        JOIN SITE s ON a.site_id = s.site_id
+        WHERE s.name = 'Cergy' AND a.assigned_user_id IS NOT NULL
+        AND ROWNUM = 1;
+        
+        -- Libération de l'actif
+        release_asset(v_asset_id);
+        DBMS_OUTPUT.PUT_LINE('Actif libéré avec succès');
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Erreur: ' || SQLERRM);
+    END;
+END;
+/
+
+-- Test avec actif inexistant
+BEGIN
+    -- Tentative de libération d'un actif inexistant
+    release_asset(999);
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Erreur attendue: ' || SQLERRM);
+END;
+/
+
 -- Procedure to change asset status
 CREATE OR REPLACE PROCEDURE change_asset_status(
     p_asset_id NUMBER,
     p_new_status VARCHAR2
 ) IS
     v_asset_exists NUMBER;
+    v_valid_status NUMBER;
 BEGIN
     -- Check if asset exists
     SELECT COUNT(*) INTO v_asset_exists 
@@ -125,9 +200,17 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20002, 'Asset not found');
     END IF;
     
-    -- Validate status
-    IF p_new_status NOT IN ('active', 'maintenance', 'decommissioned') THEN
-        RAISE_APPLICATION_ERROR(-20005, 'Invalid status. Valid statuses are: active, maintenance, decommissioned');
+    -- Check if new status is valid
+    SELECT COUNT(*) INTO v_valid_status 
+    FROM (
+        SELECT 'active' as status FROM DUAL
+        UNION ALL SELECT 'maintenance' FROM DUAL
+        UNION ALL SELECT 'decommissioned' FROM DUAL
+    ) 
+    WHERE status = p_new_status;
+    
+    IF v_valid_status = 0 THEN
+        RAISE_APPLICATION_ERROR(-20006, 'Invalid asset status');
     END IF;
     
     -- Update asset status
@@ -142,4 +225,52 @@ EXCEPTION
         ROLLBACK;
         RAISE;
 END change_asset_status;
+/
+
+-- ######################################
+-- Test change_asset_status()
+-- ######################################
+-- Cas normal
+BEGIN
+    -- Déclaration des variables pour les tests
+    DECLARE
+        v_asset_id NUMBER;
+    BEGIN
+        -- Sélection d'un actif actif de Cergy
+        SELECT a.asset_id INTO v_asset_id
+        FROM ASSET a
+        JOIN SITE s ON a.site_id = s.site_id
+        WHERE s.name = 'Cergy' AND a.status = 'active'
+        AND ROWNUM = 1;
+        
+        -- Changement du statut en maintenance
+        change_asset_status(v_asset_id, 'maintenance');
+        DBMS_OUTPUT.PUT_LINE('Statut de l''actif modifié avec succès');
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Erreur: ' || SQLERRM);
+    END;
+END;
+/
+
+-- Test avec statut invalide
+BEGIN
+    -- Déclaration des variables pour les tests
+    DECLARE
+        v_asset_id NUMBER;
+    BEGIN
+        -- Sélection d'un actif actif de Cergy
+        SELECT a.asset_id INTO v_asset_id
+        FROM ASSET a
+        JOIN SITE s ON a.site_id = s.site_id
+        WHERE s.name = 'Cergy' AND a.status = 'active'
+        AND ROWNUM = 1;
+        
+        -- Tentative de changement vers un statut invalide
+        change_asset_status(v_asset_id, 'invalid_status');
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Erreur attendue: ' || SQLERRM);
+    END;
+END;
 /
