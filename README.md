@@ -34,7 +34,7 @@ Suivez attentivement ces étapes **dans l'ordre indiqué**. Chaque étape préci
 
 ---
 
-### 1. Configuration Initiale de la Base de Données Cergy
+### 1. Configuration Initiale de la Base de Données CENTRALISÉE Cergy
 
 **➡️ Connectez-vous à l'instance de base de données CERGY.**
 
@@ -79,7 +79,7 @@ g.  **Créer les clusters de tables sur Cergy :**
 
 ---
 
-### 2. Configuration de la Base de Données Pau et de la Répartition
+### 2. Configuration de la Base de Données RÉPARTIE Pau et Répartition des Données
 
 Cette section configure l'instance de Pau et établit la communication entre les deux bases.
 
