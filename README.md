@@ -36,7 +36,7 @@ Suivez attentivement ces étapes **dans l'ordre indiqué**. Chaque étape préci
 
 ### 1. Configuration Initiale de la Base de Données CENTRALISÉE Cergy
 
-**➡️ Connectez-vous à l'instance de base de données CERGY.**
+** Connectez-vous à l'instance de base de données CERGY.**
 
 a.  **Créer les utilisateurs et rôles initiaux :**
     Exécutez le script suivant pour créer les schémas utilisateurs et les rôles nécessaires sur Cergy.
@@ -84,47 +84,47 @@ g.  **Créer les clusters de tables sur Cergy :**
 Cette section configure l'instance de Pau et établit la communication entre les deux bases.
 
 a.  **Préparer la base Pau (Utilisateurs/Rôles) :**
-    **➡️ Connectez-vous à l'instance de base de données PAU.**
+    ** Connectez-vous à l'instance de base de données PAU.**
     Naviguez dans le dossier `Pau_(distributed_database)` dans votre terminal ou assurez-vous que votre client SQL exécute le script depuis ce chemin relatif.
     ```sql
     @Pau_(distributed_database)/1.create_users_roles-PAU.sql
     ```
 
 b.  **Créer les tables Pau :**
-    **➡️ Toujours connecté à PAU.**
+    ** Toujours connecté à PAU.**
     ```sql
     @Pau_(distributed_database)/2.create_tables-PAU.sql
     ```
 
 c.  **Attribuer les privilèges sur Pau :**
-    **➡️ Toujours connecté à PAU.**
+    ** Toujours connecté à PAU.**
     ```sql
     @Pau_(distributed_database)/3.grant_privileges_to_users-PAU.sql
     ```
 
 d.  **Créer le lien de base de données de Pau vers Cergy (`DB_LINK_CERGY`) :**
-    **➡️ Toujours connecté à PAU.**
+    ** Toujours connecté à PAU.**
     Ce lien permettra à Pau d'interroger Cergy. Assurez-vous que la configuration réseau permet à l'instance Pau de contacter l'instance Cergy via les informations fournies *dans* le script SQL.
     ```sql
     @Pau_(distributed_database)/4.create_database_link-PAU.sql
     ```
 
 e.  **Créer le lien de base de données de Cergy vers Pau (`DB_LINK_PAU`) :**
-    **‼️➡️ IMPORTANT : Connectez-vous maintenant à l'instance de CERGY ‼️**
+    ** !!! IMPORTANT : Connectez-vous maintenant à l'instance de CERGY !!! **
     Ce lien permettra à Cergy d'interroger Pau. Assurez-vous que la configuration réseau permet à l'instance Cergy de contacter l'instance Pau via les informations fournies *dans* le script SQL.
     ```sql
     @Pau_(distributed_database)/4bis.create_database_link-CERGY.sql
     ```
 
 f.  **Insérer/Migrer les données distribuées (depuis Cergy vers Pau) :**
-    **➡️ Toujours connecté à CERGY.**
-    **⚠️ ATTENTION :** Ce script est critique. Il insère des données spécifiques au site de Pau *depuis Cergy* dans la base de Pau (via le `DB_LINK_PAU`) et **supprime ensuite ces mêmes données de la base de Cergy** pour finaliser la répartition.
+    ** Toujours connecté à CERGY.**
+    ** ATTENTION :** Ce script est critique. Il insère des données spécifiques au site de Pau *depuis Cergy* dans la base de Pau (via le `DB_LINK_PAU`) et **supprime ensuite ces mêmes données de la base de Cergy** pour finaliser la répartition.
     ```sql
     @Pau_(distributed_database)/5.insert_distributed_data_from_CERGY.sql
     ```
 
 g.  **Créer les vues, index et clusters sur Pau :**
-    **➡️ Connectez-vous à nouveau à l'instance de PAU.**
+    ** Connectez-vous à nouveau à l'instance de PAU.**
     Créez les objets spécifiques à Pau après l'insertion des données.
     ```sql
     @Pau_(distributed_database)/views-PAU.sql
@@ -138,6 +138,6 @@ g.  **Créer les vues, index et clusters sur Pau :**
 
 Ces vues permettent potentiellement d'avoir une vision consolidée des données des deux sites.
 
-**➡️ Connectez-vous à l'instance de CERGY.**
+** Connectez-vous à l'instance de CERGY.**
 ```sql
 @global_views.sql
